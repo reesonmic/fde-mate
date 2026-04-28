@@ -1,0 +1,223 @@
+/* ==========================================================================
+   FDE 工作台 · 设计令牌（Design Tokens）+ 基础组件
+   严格对齐蓝本：.changes/新增-FDE工作台-20260428/prototype/index.html
+   ========================================================================== */
+
+:root {
+  /* 主色 */
+  --primary: #1677FF;
+  --primary-hover: #4096FF;
+  --primary-active: #0958D9;
+  --primary-dark: #0050B3;
+  --primary-light: #69B1FF;
+  --primary-bg: #E6F4FF;
+
+  /* 中性色 */
+  --bg-page: #F5F7FA;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F0F5FF;
+  --text-1: #1F2937;
+  --text-2: #4B5563;
+  --text-3: #6B7280;
+  --text-4: #9CA3AF;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+
+  /* 状态色 */
+  --success: #52C41A;
+  --warning: #FAAD14;
+  --danger:  #FF4D4F;
+  --info:    #1677FF;
+
+  /* 4 助手徽章渐变 */
+  --badge-task:    linear-gradient(135deg, #1677FF 0%, #0050B3 100%); /* T 蓝 */
+  --badge-project: linear-gradient(135deg, #722ED1 0%, #531DAB 100%); /* P 紫 */
+  --badge-coach:   linear-gradient(135deg, #13C2C2 0%, #08979C 100%); /* C 青 */
+  --badge-files:   linear-gradient(135deg, #FA8C16 0%, #D46B08 100%); /* F 橙 */
+
+  /* 6 文件类型色 */
+  --file-color-pdf:    #FF4D4F;
+  --file-color-doc:    #1677FF;
+  --file-color-xls:    #52C41A;
+  --file-color-ppt:    #FA8C16;
+  --file-color-img:    #722ED1;
+  --file-color-folder: #FAAD14;
+
+  /* 圆角 */
+  --radius-card: 8px;
+  --radius-btn:  6px;
+  --radius-sm:   4px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+
+  /* 通用渐变 */
+  --gradient-primary: linear-gradient(135deg, #1677FF 0%, #0050B3 100%);
+  --gradient-card:    linear-gradient(135deg, #E6F4FF 0%, #F0F5FF 100%);
+}
+
+/* ========== 基础重置 ========== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  font-size: 14px; color: var(--text-1); background: var(--bg-page);
+  -webkit-font-smoothing: antialiased; line-height: 1.5;
+}
+a { color: inherit; text-decoration: none; }
+button { border: none; background: transparent; cursor: pointer; font: inherit; color: inherit; }
+input, textarea { border: none; outline: none; font: inherit; color: inherit; }
+ul, li { list-style: none; }
+img { max-width: 100%; vertical-align: middle; }
+
+/* ========== 图标系统 ========== */
+.ico {
+  width: 16px; height: 16px;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+  flex-shrink: 0; vertical-align: -3px;
+  display: inline-block;
+}
+.ico-sm { width: 14px; height: 14px; }
+.ico-lg { width: 20px; height: 20px; }
+.ico-xl { width: 24px; height: 24px; }
+.ico-primary { color: var(--primary); }
+.ico-muted   { color: var(--text-3); }
+.ico-success { color: var(--success); }
+.ico-warning { color: var(--warning); }
+.ico-danger  { color: var(--danger); }
+
+/* ========== 助手徽章 ========== */
+.assistant-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  font-size: 14px; font-weight: 700; color: #fff;
+  letter-spacing: -0.5px; flex-shrink: 0;
+  font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  background: var(--gradient-primary);
+  box-shadow: 0 2px 6px rgba(22,119,255,0.18);
+}
+.assistant-badge.task    { background: var(--badge-task);    box-shadow: 0 2px 6px rgba(22,119,255,0.22); }
+.assistant-badge.project { background: var(--badge-project); box-shadow: 0 2px 6px rgba(114,46,209,0.22); }
+.assistant-badge.coach   { background: var(--badge-coach);   box-shadow: 0 2px 6px rgba(19,194,194,0.22); }
+.assistant-badge.files   { background: var(--badge-files);   box-shadow: 0 2px 6px rgba(250,140,22,0.22); }
+.assistant-badge.sm { width: 24px; height: 24px; font-size: 11px; border-radius: 6px; }
+.assistant-badge.lg { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
+.assistant-badge.xl { width: 56px; height: 56px; font-size: 22px; border-radius: 14px; }
+
+/* ========== 状态 dot ========== */
+.status-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  flex-shrink: 0;
+}
+.status-dot.danger  { background: var(--danger);  box-shadow: 0 0 0 3px rgba(255,77,79,0.12); }
+.status-dot.warning { background: var(--warning); box-shadow: 0 0 0 3px rgba(250,173,20,0.12); }
+.status-dot.success { background: var(--success); }
+.status-dot.info    { background: var(--primary); }
+
+/* ========== 按钮 ========== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 6px 14px; border-radius: var(--radius-btn);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all 0.18s; line-height: 1.4; white-space: nowrap;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-default { background: #fff; color: var(--text-1); border: 1px solid var(--border); }
+.btn-default:hover { color: var(--primary); border-color: var(--primary); }
+.btn-text { color: var(--text-3); padding: 4px 8px; }
+.btn-text:hover { color: var(--primary); background: var(--primary-bg); border-radius: var(--radius-sm); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-lg { padding: 9px 20px; font-size: 14px; }
+
+/* ========== 卡片 ========== */
+.card {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  padding: 16px; box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+.card-title {
+  font-size: 14px; font-weight: 600; color: var(--text-1);
+  margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+}
+
+/* ========== 按钮 light（在深底上的浅色按钮，用于 welcome banner） ========== */
+.btn-light {
+  background: rgba(255,255,255,0.18); color: #fff;
+  border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(4px);
+}
+.btn-light:hover { background: rgba(255,255,255,0.28); }
+.btn-block { width: 100%; }
+
+/* ========== 标签 tag（同时支持 .tag-* 和蓝本的 .tag.danger 速写） ========== */
+.tag {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 7px; border-radius: 10px;
+  font-size: 11px; font-weight: 500; line-height: 1.6;
+  background: var(--bg-page); color: var(--text-2);
+}
+.tag-blue,    .tag.blue,    .tag.info     { background: var(--primary-bg); color: var(--primary); }
+.tag-red,     .tag.red,     .tag.danger   { background: #FFF1F0; color: var(--danger); }
+.tag-yellow,  .tag.yellow,  .tag.warning  { background: #FFFBE6; color: #D48806; }
+.tag-green,   .tag.green,   .tag.success  { background: #F6FFED; color: var(--success); }
+.tag-purple,  .tag.purple                 { background: #F9F0FF; color: #722ED1; }
+.tag-cyan,    .tag.cyan                   { background: #E6FFFB; color: #08979C; }
+.tag-gray,    .tag.gray                   { background: var(--bg-page); color: var(--text-3); }
+
+/* ========== Avatar（用户头像 / 圆形小徽章） ========== */
+.avatar, .avatar-mini {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--gradient-primary); color: #fff;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.avatar.sm, .avatar-mini { width: 24px; height: 24px; font-size: 11px; }
+.avatar.lg { width: 36px; height: 36px; font-size: 14px; }
+
+/* ========== 进度条 ========== */
+.progress {
+  height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; background: var(--gradient-primary); border-radius: 3px;
+  transition: width 0.3s;
+}
+.progress-bar.warning { background: linear-gradient(90deg, #FAAD14, #FA8C16); }
+.progress-bar.danger  { background: linear-gradient(90deg, #FF7875, #FF4D4F); }
+.progress-bar.success { background: linear-gradient(90deg, #73D13D, #52C41A); }
+
+/* ========== 文本辅助类 ========== */
+.text-muted   { color: var(--text-3); }
+.text-warning { color: var(--warning); }
+.text-danger  { color: var(--danger); }
+.text-success { color: var(--success); }
+.text-primary { color: var(--primary); }
+
+/* ========== NEW 角标 ========== */
+.badge-new {
+  display: inline-block; padding: 0 5px; height: 14px; line-height: 14px;
+  background: var(--danger); color: #fff;
+  font-size: 9px; font-weight: 700; border-radius: 7px;
+  margin-left: 4px; letter-spacing: 0.5px;
+}
+.badge-tip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; background: var(--primary-bg); color: var(--primary);
+  border-radius: 10px; font-size: 11px; font-weight: 500;
+}
+
+/* ========== 图标+文案组合 ========== */
+.title-with-icon, .meta-with-icon {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.meta-with-icon { gap: 4px; }
+.meta-with-icon .ico { color: var(--text-3); }
+
+/* ========== 滚动条 ========== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
+::-webkit-scrollbar-track { background: transparent; }

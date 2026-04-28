@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件中心 · FDE 工作台</title>
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/copilot.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body data-page="files">
+  <div id="svg-sprite-mount"></div>
+  <div class="app">
+    <header class="header"></header>
+    <aside class="nav"></aside>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">文件中心 <span class="assistant-badge files sm" style="margin-left:8px;">F</span></h1>
+          <p class="page-subtitle">智能搜索 · 文档总结 · 批量归档 · RAG 问答</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-default"><svg class="ico ico-sm"><use href="#i-upload"/></svg>上传</button>
+          <button class="btn btn-default"><svg class="ico ico-sm"><use href="#i-plus"/></svg>新建文件夹</button>
+          <button class="btn btn-primary"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg>AI 智能问答</button>
+        </div>
+      </div>
+
+      <!-- 文件浏览：左树 + 右网格 -->
+      <div class="files-layout">
+        <!-- 左侧文件树 -->
+        <aside class="file-tree">
+          <div class="file-tree-section">
+            <div class="file-tree-section-title">空间</div>
+            <div class="file-tree-item"><svg class="ico ico-sm"><use href="#i-folder"/></svg>个人空间</div>
+            <div class="file-tree-item active"><svg class="ico ico-sm ico-primary"><use href="#i-folder"/></svg>项目空间</div>
+            <div class="file-tree-item sub">└ 阿里云A数据中台</div>
+            <div class="file-tree-item sub2 active">　└ 交付物</div>
+            <div class="file-tree-item sub">└ 客户B 营销数据平台</div>
+            <div class="file-tree-item sub">└ 客户C 智能客服</div>
+            <div class="file-tree-item"><svg class="ico ico-sm"><use href="#i-folder"/></svg>客户空间</div>
+            <div class="file-tree-item"><svg class="ico ico-sm"><use href="#i-folder"/></svg>共享给我</div>
+          </div>
+          <div class="file-tree-section">
+            <div class="file-tree-section-title">其他</div>
+            <div class="file-tree-item"><svg class="ico ico-sm"><use href="#i-trash"/></svg>回收站</div>
+          </div>
+        </aside>
+
+        <!-- 右侧网格 -->
+        <div class="file-grid-area">
+          <!-- 路径面包屑 + 工具栏 -->
+          <div class="file-toolbar">
+            <div class="file-breadcrumb">
+              <span>项目空间</span>
+              <svg class="ico ico-sm"><use href="#i-chevron-right"/></svg>
+              <span>阿里云A数据中台</span>
+              <svg class="ico ico-sm"><use href="#i-chevron-right"/></svg>
+              <b>交付物</b>
+            </div>
+            <div class="file-toolbar-right">
+              <span class="text-muted" style="font-size:12px;">6 个文件 · 已选 1 个</span>
+              <button class="btn-text"><svg class="ico ico-sm"><use href="#i-grid"/></svg></button>
+              <button class="btn-text"><svg class="ico ico-sm"><use href="#i-list"/></svg></button>
+            </div>
+          </div>
+
+          <div class="file-grid">
+            <div class="file-card folder">
+              <svg class="ico ico-xl" style="color:#FA8C16;"><use href="#i-folder"/></svg>
+              <div class="file-card-name">客户验收</div>
+              <div class="file-card-meta">8 项</div>
+            </div>
+            <div class="file-card folder">
+              <svg class="ico ico-xl" style="color:#FA8C16;"><use href="#i-folder"/></svg>
+              <div class="file-card-name">技术文档</div>
+              <div class="file-card-meta">12 项</div>
+            </div>
+            <div class="file-card selected">
+              <span class="file-card-selected-tag">已选</span>
+              <svg class="ico ico-xl ico-danger"><use href="#i-file-pdf"/></svg>
+              <div class="file-card-name">项目交付方案 v2.1.pdf</div>
+              <div class="file-card-meta">2.4 MB · 4-22</div>
+            </div>
+            <div class="file-card">
+              <svg class="ico ico-xl ico-primary"><use href="#i-file-doc"/></svg>
+              <div class="file-card-name">需求规格说明书.docx</div>
+              <div class="file-card-meta">876 KB · 4-20</div>
+            </div>
+            <div class="file-card">
+              <svg class="ico ico-xl ico-success"><use href="#i-file-xls"/></svg>
+              <div class="file-card-name">数据字典 v1.3.xlsx</div>
+              <div class="file-card-meta">1.2 MB · 4-25</div>
+            </div>
+            <div class="file-card">
+              <svg class="ico ico-xl" style="color:#FA8C16;"><use href="#i-file-ppt"/></svg>
+              <div class="file-card-name">架构设计 PPT.pptx</div>
+              <div class="file-card-meta">3.5 MB · 4-15</div>
+            </div>
+            <div class="file-card">
+              <svg class="ico ico-xl" style="color:#722ED1;"><use href="#i-file-img"/></svg>
+              <div class="file-card-name">系统架构图.png</div>
+              <div class="file-card-meta">820 KB · 4-18</div>
+            </div>
+            <div class="file-card">
+              <svg class="ico ico-xl ico-danger"><use href="#i-file-pdf"/></svg>
+              <div class="file-card-name">客户验收报告.pdf</div>
+              <div class="file-card-meta">1.8 MB · 4-26</div>
+            </div>
+          </div>
+
+          <!-- 容量进度条 -->
+          <div class="files-footer">
+            <span>已使用 <b style="color:var(--text-1);">12.3 GB</b> / 100 GB</span>
+            <div class="progress"><div class="progress-bar" style="width:12.3%;"></div></div>
+            <a class="text-primary" style="font-size:12px;cursor:pointer;">扩容</a>
+          </div>
+        </div>
+      </div>
+    </main>
+    <aside class="copilot" id="copilot"></aside>
+  </div>
+
+  <script src="../assets/js/icons.js"></script>
+  <script src="../assets/js/copilot.js"></script>
+  <script src="../assets/js/mention.js"></script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

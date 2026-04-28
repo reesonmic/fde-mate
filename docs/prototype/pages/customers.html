@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客户空间 · FDE 工作台</title>
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/copilot.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+  <style>
+    /* === 客户空间专属布局（仅本页用） === */
+    .customers-layout { display: grid; grid-template-columns: 360px 1fr; gap: 16px; }
+
+    /* 左侧客户列表 */
+    .customer-list-panel {
+      background: #fff; border-radius: 8px; border: 1px solid var(--border-light);
+      overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 280px);
+    }
+    .customer-list-toolbar {
+      padding: 12px; border-bottom: 1px solid var(--border-light);
+      background: var(--bg-page);
+    }
+    .customer-list-search {
+      display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+      background: #fff; border-radius: 16px; border: 1px solid transparent;
+      transition: all 0.18s; margin-bottom: 10px;
+    }
+    .customer-list-search:focus-within { border-color: var(--primary); }
+    .customer-list-search input { flex: 1; background: transparent; font-size: 13px; }
+    .customer-list-filter {
+      display: flex; gap: 4px; flex-wrap: wrap;
+    }
+    .customer-list-filter .status-tab { padding: 3px 10px; font-size: 11px; }
+    .customer-list-body { flex: 1; overflow-y: auto; padding: 4px; }
+    .customer-list-item {
+      display: flex; align-items: center; gap: 10px; padding: 12px 10px;
+      border-radius: 6px; cursor: pointer; transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .customer-list-item:hover { background: var(--bg-page); }
+    .customer-list-item.active {
+      background: var(--gradient-card); border-left-color: var(--primary);
+    }
+    .customer-list-item-info { flex: 1; min-width: 0; }
+    .customer-list-item-name {
+      font-size: 13px; font-weight: 600; color: var(--text-1);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .customer-list-item-meta {
+      font-size: 11px; color: var(--text-3); margin-top: 4px;
+      display: flex; gap: 8px;
+    }
+
+    /* 右侧客户详情 */
+    .customer-detail {
+      background: #fff; border-radius: 8px; border: 1px solid var(--border-light);
+      padding: 0; overflow: hidden;
+    }
+
+    /* 客户概览头 */
+    .customer-overview {
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 24px; align-items: center;
+      padding: 22px 24px; background: var(--gradient-card);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .customer-logo {
+      width: 64px; height: 64px; border-radius: 14px;
+      background: linear-gradient(135deg, #1677FF, #0958D9);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 22px; font-weight: 700;
+      box-shadow: 0 4px 12px rgba(22,119,255,0.25);
+    }
+    .customer-overview-name {
+      font-size: 20px; font-weight: 700; color: var(--text-1);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .customer-overview-meta {
+      display: flex; gap: 16px; font-size: 12px; color: var(--text-3);
+      margin-top: 8px; flex-wrap: wrap;
+    }
+    .customer-overview-meta > span { display: inline-flex; align-items: center; gap: 5px; }
+    .customer-kpis {
+      display: flex; gap: 24px; padding: 0 8px;
+    }
+    .customer-kpi { text-align: center; }
+    .customer-kpi-value { font-size: 22px; font-weight: 700; color: var(--text-1); line-height: 1; }
+    .customer-kpi-label { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    /* 客户内容区 */
+    .customer-detail-tabs { padding: 8px 16px 0; }
+    .customer-detail-body { padding: 16px 18px; }
+
+    /* 联系人卡片 */
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .contact-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px; background: var(--bg-page); border-radius: 8px;
+      transition: all 0.15s; cursor: pointer;
+    }
+    .contact-card:hover { background: var(--bg-hover); transform: translateX(2px); }
+    .contact-info { flex: 1; min-width: 0; }
+    .contact-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .contact-role { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .contact-info .badge-tip {
+      display: inline-block; padding: 1px 6px; background: var(--primary-bg); color: var(--primary);
+      border-radius: 4px; font-size: 10px; margin-top: 4px;
+    }
+
+    /* 商机列表 */
+    .opp-item {
+      padding: 12px; background: var(--bg-page); border-radius: 8px; margin-bottom: 8px;
+      display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
+    }
+    .opp-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .opp-meta { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+    .opp-amount { font-size: 16px; font-weight: 700; color: var(--success); }
+
+    /* 历史项目 timeline */
+    .project-history-list { display: flex; flex-direction: column; gap: 8px; }
+    .project-history-item {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+      padding: 12px; background: var(--bg-page); border-radius: 8px; align-items: center;
+    }
+    .project-history-status {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .project-history-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .project-history-meta { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+  </style>
+</head>
+<body data-page="customers">
+  <div id="svg-sprite-mount"></div>
+  <div class="app">
+    <header class="header"></header>
+    <aside class="nav"></aside>
+    <main class="main">
+      <!-- 页头 -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">客户空间</h1>
+          <p class="page-subtitle">8 个客户 · 4 战略 / 3 重点 / 1 一般 · 累计签约 ¥4280w</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-default"><svg class="ico ico-sm"><use href="#i-download"/></svg>导入</button>
+          <button class="btn btn-primary"><svg class="ico ico-sm"><use href="#i-plus"/></svg>新建客户</button>
+        </div>
+      </div>
+
+      <!-- 4 张统计卡 -->
+      <section class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(22,119,255,0.12);color:var(--primary);">
+              <svg class="ico ico-lg"><use href="#i-users"/></svg>
+            </div>
+            <span class="stat-card-trend">→ 持平</span>
+          </div>
+          <div class="stat-card-value">4</div>
+          <div class="stat-card-label">战略客户</div>
+          <div class="stat-card-meta">阿里云A · 客户B · 客户E · 客户H</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(114,46,209,0.12);color:#722ED1;">
+              <svg class="ico ico-lg"><use href="#i-project"/></svg>
+            </div>
+            <span class="stat-card-trend up">↑ 2</span>
+          </div>
+          <div class="stat-card-value">12</div>
+          <div class="stat-card-label">在交付项目</div>
+          <div class="stat-card-meta">分布于 6 个客户</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(82,196,26,0.12);color:var(--success);">
+              <svg class="ico ico-lg"><use href="#i-trending-up"/></svg>
+            </div>
+            <span class="stat-card-trend up">↑ ¥120w</span>
+          </div>
+          <div class="stat-card-value">¥850w</div>
+          <div class="stat-card-label">本季度商机</div>
+          <div class="stat-card-meta">5 个高优商机跟进中</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(255,77,79,0.12);color:var(--danger);">
+              <svg class="ico ico-lg"><use href="#i-alert-triangle"/></svg>
+            </div>
+            <span class="stat-card-trend">需关注</span>
+          </div>
+          <div class="stat-card-value">1</div>
+          <div class="stat-card-label">健康度告警</div>
+          <div class="stat-card-meta">客户C · 健康度 35</div>
+        </div>
+      </section>
+
+      <!-- 主体：左侧列表 + 右侧详情 -->
+      <div class="customers-layout">
+        <!-- 左侧客户列表 -->
+        <aside class="customer-list-panel">
+          <div class="customer-list-toolbar">
+            <div class="customer-list-search">
+              <svg class="ico ico-sm ico-muted"><use href="#i-search"/></svg>
+              <input placeholder="搜索客户名称 / 行业 / 联系人">
+            </div>
+            <div class="customer-list-filter">
+              <div class="status-tab active">全部 <b>8</b></div>
+              <div class="status-tab">战略 <b>4</b></div>
+              <div class="status-tab">重点 <b>3</b></div>
+              <div class="status-tab">一般 <b>1</b></div>
+            </div>
+          </div>
+          <div class="customer-list-body">
+            <div class="customer-list-item active">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#1677FF,#0958D9);">阿</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">阿里云客户A <span class="tag blue">战略</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>3 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>今天</span>
+                </div>
+              </div>
+            </div>
+            <div class="customer-list-item">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#722ED1,#531DAB);">B</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">客户B（零售集团）<span class="tag blue">战略</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>2 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>3 天前</span>
+                </div>
+              </div>
+            </div>
+            <div class="customer-list-item">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#FA8C16,#D46B08);">C</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">客户C（金融行业）<span class="tag yellow">重点</span> <span class="tag red">告警</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>1 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>1 天前</span>
+                </div>
+              </div>
+            </div>
+            <div class="customer-list-item">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#13C2C2,#08979C);">D</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">客户D（数据治理）<span class="tag yellow">重点</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>2 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>5 天前</span>
+                </div>
+              </div>
+            </div>
+            <div class="customer-list-item">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#52C41A,#389E0D);">E</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">客户E（能源行业）<span class="tag blue">战略</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>2 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>1 周前</span>
+                </div>
+              </div>
+            </div>
+            <div class="customer-list-item">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#EB2F96,#C41D7F);">F</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">客户F（医药健康）<span class="tag yellow">重点</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>1 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>2 周前</span>
+                </div>
+              </div>
+            </div>
+            <div class="customer-list-item">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#F5222D,#A8071A);">G</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">客户G（教育行业）<span class="tag blue">战略</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>1 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>3 周前</span>
+                </div>
+              </div>
+            </div>
+            <div class="customer-list-item">
+              <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#8C8C8C,#595959);">H</div>
+              <div class="customer-list-item-info">
+                <div class="customer-list-item-name">客户H（制造业）<span class="tag gray">一般</span></div>
+                <div class="customer-list-item-meta">
+                  <span><svg class="ico ico-sm"><use href="#i-project"/></svg>0 项目</span>
+                  <span><svg class="ico ico-sm"><use href="#i-clock"/></svg>1 月前</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 右侧客户详情 -->
+        <section class="customer-detail">
+          <!-- 客户概览头 -->
+          <div class="customer-overview">
+            <div class="customer-logo">阿</div>
+            <div>
+              <div class="customer-overview-name">
+                阿里云客户A
+                <span class="tag blue">战略客户</span>
+                <span class="status-dot success" title="健康度优"></span>
+              </div>
+              <div class="customer-overview-meta">
+                <span><svg class="ico ico-sm"><use href="#i-globe"/></svg>互联网 / 云计算</span>
+                <span><svg class="ico ico-sm"><use href="#i-users"/></svg>规模 5000+ 人</span>
+                <span><svg class="ico ico-sm"><use href="#i-calendar"/></svg>合作起始 2024-08</span>
+                <span><svg class="ico ico-sm"><use href="#i-target"/></svg>负责人 吾明</span>
+              </div>
+            </div>
+            <div class="customer-kpis">
+              <div class="customer-kpi">
+                <div class="customer-kpi-value">3</div>
+                <div class="customer-kpi-label">在交付项目</div>
+              </div>
+              <div class="customer-kpi">
+                <div class="customer-kpi-value">¥2300w</div>
+                <div class="customer-kpi-label">累计签约</div>
+              </div>
+              <div class="customer-kpi">
+                <div class="customer-kpi-value" style="color:var(--success);">88</div>
+                <div class="customer-kpi-label">健康度</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="customer-detail-tabs">
+            <div class="status-tabs" style="background:transparent;border:none;padding:0;margin:0;">
+              <div class="status-tab active">概览</div>
+              <div class="status-tab">联系人 <b>5</b></div>
+              <div class="status-tab">商机 <b>2</b></div>
+              <div class="status-tab">历史项目 <b>8</b></div>
+              <div class="status-tab">文件 <b>24</b></div>
+            </div>
+          </div>
+
+          <!-- 概览内容 -->
+          <div class="customer-detail-body">
+            <!-- 关键联系人 -->
+            <div class="card-section">
+              <div class="card-section-header">
+                <h3 class="card-section-title">
+                  <svg class="ico"><use href="#i-users"/></svg>关键联系人
+                </h3>
+                <a class="btn btn-default btn-sm">查看全部 <b>5</b></a>
+              </div>
+              <div class="card-section-body">
+                <div class="contact-grid">
+                  <div class="contact-card">
+                    <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#1677FF,#0958D9);">王</div>
+                    <div class="contact-info">
+                      <div class="contact-name">王经理</div>
+                      <div class="contact-role">客户技术总监 · CTO 直接汇报</div>
+                      <span class="badge-tip">关键决策人</span>
+                    </div>
+                  </div>
+                  <div class="contact-card">
+                    <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#722ED1,#531DAB);">李</div>
+                    <div class="contact-info">
+                      <div class="contact-name">李总监</div>
+                      <div class="contact-role">数据中台负责人</div>
+                      <span class="badge-tip">日常对接</span>
+                    </div>
+                  </div>
+                  <div class="contact-card">
+                    <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#FA8C16,#D46B08);">张</div>
+                    <div class="contact-info">
+                      <div class="contact-name">张工程师</div>
+                      <div class="contact-role">技术负责人 · 接口对接</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 商机漏斗 -->
+            <div class="card-section">
+              <div class="card-section-header">
+                <h3 class="card-section-title">
+                  <svg class="ico"><use href="#i-trending-up"/></svg>商机跟进
+                </h3>
+                <a class="btn btn-default btn-sm">+ 新建商机</a>
+              </div>
+              <div class="card-section-body">
+                <div class="opp-item">
+                  <div>
+                    <div class="opp-name">数据中台二期 - 实时数仓扩展</div>
+                    <div class="opp-meta">阶段：方案确认中 · 预计签约 2026 Q3 · 跟进 3 周</div>
+                  </div>
+                  <span class="tag green">高优</span>
+                  <div class="opp-amount">¥480w</div>
+                </div>
+                <div class="opp-item">
+                  <div>
+                    <div class="opp-name">AI 智能运维平台</div>
+                    <div class="opp-meta">阶段：需求调研 · 预计签约 2026 Q4 · 跟进 1 周</div>
+                  </div>
+                  <span class="tag yellow">中优</span>
+                  <div class="opp-amount">¥260w</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 历史项目 -->
+            <div class="card-section">
+              <div class="card-section-header">
+                <h3 class="card-section-title">
+                  <svg class="ico"><use href="#i-project"/></svg>历史项目
+                </h3>
+                <a class="btn btn-default btn-sm">查看全部 <b>8</b></a>
+              </div>
+              <div class="card-section-body">
+                <div class="project-history-list">
+                  <a class="project-history-item" href="project-detail.html">
+                    <span class="project-history-status" style="background:var(--warning);"></span>
+                    <div>
+                      <div class="project-history-name">阿里云A 数据中台交付项目 <span class="tag blue">实施中</span></div>
+                      <div class="project-history-meta">2026-01 ~ 2026-06 · ¥800w · 健康度 78</div>
+                    </div>
+                    <svg class="ico ico-sm ico-muted"><use href="#i-arrow-right"/></svg>
+                  </a>
+                  <div class="project-history-item">
+                    <span class="project-history-status" style="background:var(--success);"></span>
+                    <div>
+                      <div class="project-history-name">阿里云A 数据治理平台一期 <span class="tag green">已交付</span></div>
+                      <div class="project-history-meta">2025-06 ~ 2025-12 · ¥620w · 客户满意度 4.8/5</div>
+                    </div>
+                    <svg class="ico ico-sm ico-muted"><use href="#i-arrow-right"/></svg>
+                  </div>
+                  <div class="project-history-item">
+                    <span class="project-history-status" style="background:var(--success);"></span>
+                    <div>
+                      <div class="project-history-name">阿里云A BI 看板搭建 <span class="tag green">已交付</span></div>
+                      <div class="project-history-meta">2025-01 ~ 2025-05 · ¥380w · 客户满意度 4.9/5</div>
+                    </div>
+                    <svg class="ico ico-sm ico-muted"><use href="#i-arrow-right"/></svg>
+                  </div>
+                  <div class="project-history-item">
+                    <span class="project-history-status" style="background:var(--success);"></span>
+                    <div>
+                      <div class="project-history-name">阿里云A 数据集成 POC <span class="tag green">已交付</span></div>
+                      <div class="project-history-meta">2024-08 ~ 2024-12 · ¥120w · 首次合作项目</div>
+                    </div>
+                    <svg class="ico ico-sm ico-muted"><use href="#i-arrow-right"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <aside class="copilot" id="copilot"></aside>
+  </div>
+
+  <script src="../assets/js/icons.js"></script>
+  <script src="../assets/js/copilot.js"></script>
+  <script src="../assets/js/mention.js"></script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 对话中心 · FDE 工作台</title>
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/copilot.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body data-page="ai-chat">
+  <div id="svg-sprite-mount"></div>
+  <div class="app">
+    <header class="header"></header>
+    <aside class="nav"></aside>
+    <main class="main no-padding">
+      <div class="ai-chat-layout">
+        <!-- 左侧历史 -->
+        <aside class="chat-sidebar">
+          <div class="chat-sidebar-header">
+            <button class="btn btn-primary btn-block"><svg class="ico ico-sm"><use href="#i-plus"/></svg>新建对话</button>
+          </div>
+          <div class="chat-sidebar-search">
+            <svg class="ico ico-sm ico-muted"><use href="#i-search"/></svg>
+            <input placeholder="搜索历史对话">
+          </div>
+          <div class="chat-history-section">
+            <div class="chat-history-title">今天</div>
+            <div class="chat-history-item active">
+              <svg class="ico ico-sm ico-primary"><use href="#i-message-circle"/></svg>
+              <div class="chat-history-info">
+                <div class="chat-history-name">阿里云A 项目周报草稿</div>
+                <div class="chat-history-meta">10:30 · 12 轮</div>
+              </div>
+            </div>
+            <div class="chat-history-item">
+              <svg class="ico ico-sm ico-muted"><use href="#i-message-circle"/></svg>
+              <div class="chat-history-info">
+                <div class="chat-history-name">数据接入方案对比</div>
+                <div class="chat-history-meta">09:15 · 5 轮</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-history-section">
+            <div class="chat-history-title">昨天</div>
+            <div class="chat-history-item">
+              <svg class="ico ico-sm ico-muted"><use href="#i-message-circle"/></svg>
+              <div class="chat-history-info">
+                <div class="chat-history-name">客户验收材料整理</div>
+                <div class="chat-history-meta">昨天 16:40 · 8 轮</div>
+              </div>
+            </div>
+            <div class="chat-history-item">
+              <svg class="ico ico-sm ico-muted"><use href="#i-message-circle"/></svg>
+              <div class="chat-history-info">
+                <div class="chat-history-name">客户C 风险升级建议</div>
+                <div class="chat-history-meta">昨天 14:20 · 6 轮</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 中间对话区 -->
+        <section class="chat-main">
+          <div class="chat-main-header">
+            <div class="chat-main-title">阿里云A 项目周报草稿</div>
+            <div class="chat-mode-tabs">
+              <div class="chat-mode-tab active">智能</div>
+              <div class="chat-mode-tab">创意</div>
+              <div class="chat-mode-tab">严谨</div>
+            </div>
+          </div>
+          <div class="chat-main-body">
+            <div class="chat-msg ai">
+              <div class="chat-msg-avatar"><svg class="ico" style="color:var(--primary);"><use href="#i-sparkles"/></svg></div>
+              <div class="chat-msg-bubble">
+                你好！我是 FDE 工作台的全局 AI 对话助手。<br/>
+                你可以向我提问任何问题，或使用 <b>@</b> 引用项目、任务、客户、文件、案例作为上下文。
+              </div>
+            </div>
+            <div class="chat-msg user">
+              <div class="chat-msg-bubble">
+                帮我基于 <span class="mention-tag">@阿里云A数据中台</span> 项目本周的进展，写一份周报草稿。
+              </div>
+              <div class="chat-msg-avatar" style="background:var(--primary);color:#fff;">吾</div>
+            </div>
+            <div class="chat-msg ai">
+              <div class="chat-msg-avatar"><svg class="ico" style="color:var(--primary);"><use href="#i-sparkles"/></svg></div>
+              <div class="chat-msg-bubble">
+                我已为你生成项目周报草稿（基于本周任务进展、风险、里程碑数据）：
+
+                <div style="margin-top:12px;padding:12px;background:var(--bg-page);border-radius:8px;font-size:13px;line-height:1.7;">
+                  <b style="color:var(--text-1);">阿里云A 数据中台 · 本周周报（4-22 ~ 4-28）</b><br/><br/>
+                  <b>① 本周进展</b><br/>
+                  · 数据接入开发完成 60%（张三）<br/>
+                  · 完成数据字典 v1.3 编写并通过评审<br/>
+                  · 客户方需求澄清会 ×2<br/><br/>
+                  <b>② 下周计划</b><br/>
+                  · 完成数据接入开发 100%<br/>
+                  · 启动 UAT 测试用例编写<br/>
+                  · 客户技术对齐会 ×1<br/><br/>
+                  <b>③ 风险与求助</b><br/>
+                  · ⚠️ 数据接入滞后 5 天，可能影响 5/20 UAT 节点<br/>
+                  · 申请客户方接口联调资源支持
+                </div>
+
+                <div style="margin-top:8px;display:flex;gap:6px;">
+                  <button class="btn btn-default btn-sm"><svg class="ico ico-sm"><use href="#i-edit"/></svg>编辑</button>
+                  <button class="btn btn-default btn-sm"><svg class="ico ico-sm"><use href="#i-download"/></svg>导出</button>
+                  <button class="btn btn-primary btn-sm">归档到项目空间</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <div class="chat-input-box">
+              <textarea class="chat-input" placeholder="向 AI 提问，按 Enter 发送 · 输入 @ 引用业务对象"></textarea>
+              <div class="chat-input-tools">
+                <span class="chat-tool-btn" onclick="openMention()"><svg class="ico ico-sm"><use href="#i-at-sign"/></svg>引用</span>
+                <span class="chat-tool-btn"><svg class="ico ico-sm"><use href="#i-paperclip"/></svg>附件</span>
+                <span class="chat-tool-btn"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg>增强</span>
+                <button class="btn btn-primary btn-sm"><svg class="ico ico-sm"><use href="#i-send"/></svg>发送</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 右侧上下文 -->
+        <aside class="chat-context-panel">
+          <div class="chat-context-header">
+            <svg class="ico ico-sm ico-primary"><use href="#i-pin"/></svg>
+            <span>当前上下文</span>
+          </div>
+          <div class="chat-context-section">
+            <div class="chat-context-section-title">已引用对象</div>
+            <div class="chat-context-card">
+              <svg class="ico ico-sm ico-primary"><use href="#i-project"/></svg>
+              <div>
+                <div style="font-weight:600;font-size:13px;">阿里云A数据中台</div>
+                <div style="font-size:11px;color:var(--text-3);">项目 · 实施中 · 健康度 78</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-context-section">
+            <div class="chat-context-section-title">智能推荐引用</div>
+            <div class="chat-context-card subtle"><svg class="ico ico-sm ico-success"><use href="#i-task"/></svg><div style="font-size:12px;">本周完成的 5 项任务</div></div>
+            <div class="chat-context-card subtle"><svg class="ico ico-sm ico-warning"><use href="#i-alert-triangle"/></svg><div style="font-size:12px;">项目当前 3 项风险</div></div>
+            <div class="chat-context-card subtle"><svg class="ico ico-sm" style="color:#FA8C16;"><use href="#i-file-pdf"/></svg><div style="font-size:12px;">上周周报：v17.pdf</div></div>
+          </div>
+          <div class="chat-context-section">
+            <div class="chat-context-section-title">对话设置</div>
+            <div style="font-size:12px;color:var(--text-2);line-height:1.7;">
+              · 模型：GPT-4 Turbo<br/>
+              · 模式：智能（自动选择）<br/>
+              · 上下文：12 条（已用 35%）
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/icons.js"></script>
+  <script src="../assets/js/mention.js"></script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

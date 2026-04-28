@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工作台 · FDE 工作台</title>
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/copilot.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body data-page="dashboard">
+  <div id="svg-sprite-mount"></div>
+  <div class="app">
+    <header class="header"></header>
+    <aside class="nav"></aside>
+    <main class="main">
+      <!-- 欢迎横幅 -->
+      <section class="welcome-banner">
+        <div class="welcome-banner-bg"></div>
+        <div class="welcome-banner-content">
+          <h1 class="welcome-title">早上好，吾明 ☀️</h1>
+          <p class="welcome-subtitle">你今天有 <b>3 项 P0 任务</b>、<b>2 个客户会议</b>、<b>1 份周报待提交</b>。让 AI 助你高效开始这一天。</p>
+          <div class="welcome-actions">
+            <button class="btn btn-light">
+              <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+              帮我准备晨会
+            </button>
+            <button class="btn btn-light">
+              <svg class="ico ico-sm"><use href="#i-flag"/></svg>
+              我今天最重要的 3 件事
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 张统计卡 -->
+      <section class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(22,119,255,0.12);color:var(--primary);">
+              <svg class="ico ico-lg"><use href="#i-task"/></svg>
+            </div>
+            <span class="stat-card-trend up">↑ 3</span>
+          </div>
+          <div class="stat-card-value">8</div>
+          <div class="stat-card-label">待办任务</div>
+          <div class="stat-card-meta">P0: 3 · P1: 4 · P2: 1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(114,46,209,0.12);color:#722ED1;">
+              <svg class="ico ico-lg"><use href="#i-project"/></svg>
+            </div>
+            <span class="stat-card-trend">→ 持平</span>
+          </div>
+          <div class="stat-card-value">4</div>
+          <div class="stat-card-label">在交付项目</div>
+          <div class="stat-card-meta">阿里云A · 客户B · 客户C · 客户D</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(82,196,26,0.12);color:var(--success);">
+              <svg class="ico ico-lg"><use href="#i-shield-check"/></svg>
+            </div>
+            <span class="stat-card-trend up">↑ 5</span>
+          </div>
+          <div class="stat-card-value">78</div>
+          <div class="stat-card-label">项目健康度</div>
+          <div class="stat-card-meta">3 绿 · 1 黄 · 0 红</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-icon" style="background:rgba(19,194,194,0.12);color:#13C2C2;">
+              <svg class="ico ico-lg"><use href="#i-message-circle"/></svg>
+            </div>
+            <span class="stat-card-trend up">↑ 6 次</span>
+          </div>
+          <div class="stat-card-value">18</div>
+          <div class="stat-card-label">本月专家 AI 提问</div>
+          <div class="stat-card-meta">24h 平均响应</div>
+        </div>
+      </section>
+
+      <!-- 任务看板 -->
+      <section class="dashboard-board">
+        <div class="dashboard-board-header">
+          <h2 class="dashboard-board-title">
+            <svg class="ico"><use href="#i-task"/></svg>
+            任务看板
+          </h2>
+          <a class="btn btn-default btn-sm" href="tasks.html">
+            查看全部 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg>
+          </a>
+        </div>
+        <div class="kanban">
+          <!-- 待办 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot info"></span>待办 <b style="color:var(--text-1);margin-left:4px;">3</b></span>
+              <button class="btn-text"><svg class="ico ico-sm"><use href="#i-plus"/></svg></button>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag danger">P0</span><span class="tag">阿里云A</span></div>
+              <div class="kanban-card-title">完成客户A的 POC 方案</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-clock"/></svg>明天 18:00</div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span><span class="tag">客户B</span></div>
+              <div class="kanban-card-title">数据接入测试用例</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-clock"/></svg>本周五</div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span></div>
+              <div class="kanban-card-title">需求评审会议材料准备</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-clock"/></svg>下周一</div>
+            </div>
+          </div>
+          <!-- 进行中 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot warning"></span>进行中 <b style="color:var(--text-1);margin-left:4px;">3</b></span>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag danger">P0</span><span class="tag">阿里云A</span></div>
+              <div class="kanban-card-title">阿里云A数据接入开发</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-history"/></svg>已 2 天</div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span></div>
+              <div class="kanban-card-title">本周项目周报编写</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-history"/></svg>进行中</div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag danger">P0</span><span class="tag">客户C</span></div>
+              <div class="kanban-card-title">客户C 风险跟踪与协调</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-history"/></svg>持续中</div>
+            </div>
+          </div>
+          <!-- 复核中 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot info"></span>复核中 <b style="color:var(--text-1);margin-left:4px;">1</b></span>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span></div>
+              <div class="kanban-card-title">技术分享 PPT 评审</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-eye"/></svg>李四 复核中</div>
+            </div>
+          </div>
+          <!-- 已完成 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot success"></span>已完成 <b style="color:var(--text-1);margin-left:4px;">5</b></span>
+            </div>
+            <div class="kanban-card" style="opacity:0.7;">
+              <div class="kanban-card-tags"><span class="tag success">已完成</span></div>
+              <div class="kanban-card-title">数据字典 v1.3 编写</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-check-circle"/></svg>4-25 完成</div>
+            </div>
+            <div class="kanban-card" style="opacity:0.7;">
+              <div class="kanban-card-tags"><span class="tag success">已完成</span></div>
+              <div class="kanban-card-title">客户B 联调环境部署</div>
+              <div class="kanban-card-meta"><svg class="ico ico-sm"><use href="#i-check-circle"/></svg>4-24 完成</div>
+            </div>
+            <div class="kanban-card" style="opacity:0.7;text-align:center;color:var(--text-3);font-size:12px;padding:8px;">还有 3 项已完成 ...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 三栏：日程 / 进度 / 学习 -->
+      <section class="three-col">
+        <!-- 今日日程 -->
+        <div class="card-section">
+          <div class="card-section-header">
+            <h3 class="card-section-title"><svg class="ico"><use href="#i-calendar"/></svg>今日日程</h3>
+          </div>
+          <div class="card-section-body">
+            <div class="schedule-item">
+              <div class="schedule-time">09:30</div>
+              <div class="schedule-info">
+                <div class="schedule-title">阿里云A项目晨会</div>
+                <div class="schedule-meta">线上 · 8 人参与</div>
+              </div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">14:00</div>
+              <div class="schedule-info">
+                <div class="schedule-title">客户B 需求评审会</div>
+                <div class="schedule-meta">客户现场 · 已准备材料</div>
+              </div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">16:30</div>
+              <div class="schedule-info">
+                <div class="schedule-title">FDE 周技术分享</div>
+                <div class="schedule-meta">A1-301 · 你是分享人</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 项目进度 -->
+        <div class="card-section">
+          <div class="card-section-header">
+            <h3 class="card-section-title"><svg class="ico"><use href="#i-project"/></svg>项目进度</h3>
+          </div>
+          <div class="card-section-body">
+            <div class="project-progress-item">
+              <div class="project-progress-name"><span class="status-dot success"></span>阿里云A数据中台</div>
+              <div class="project-progress-bar"><div class="project-progress-bar-inner" style="width:65%;background:var(--success);"></div></div>
+              <div class="project-progress-meta">实施中 · 65% · 健康度 78</div>
+            </div>
+            <div class="project-progress-item">
+              <div class="project-progress-name"><span class="status-dot success"></span>客户B 营销数据平台</div>
+              <div class="project-progress-bar"><div class="project-progress-bar-inner" style="width:85%;background:var(--success);"></div></div>
+              <div class="project-progress-meta">验收中 · 85% · 健康度 65</div>
+            </div>
+            <div class="project-progress-item">
+              <div class="project-progress-name"><span class="status-dot danger"></span>客户C 智能客服</div>
+              <div class="project-progress-bar"><div class="project-progress-bar-inner" style="width:30%;background:var(--danger);"></div></div>
+              <div class="project-progress-meta">实施中 · 30% · 健康度 35 ⚠️</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 学习推荐 -->
+        <div class="card-section">
+          <div class="card-section-header">
+            <h3 class="card-section-title"><svg class="ico"><use href="#i-lightbulb"/></svg>学习推荐</h3>
+          </div>
+          <div class="card-section-body">
+            <div class="learn-item">
+              <div class="learn-icon"><svg class="ico"><use href="#i-book"/></svg></div>
+              <div class="learn-info">
+                <div class="learn-title">客户验收冲突处理 · 方法论</div>
+                <div class="learn-meta">建议本周完成 · 8 分钟</div>
+              </div>
+            </div>
+            <div class="learn-item">
+              <div class="learn-icon"><svg class="ico"><use href="#i-bookmark"/></svg></div>
+              <div class="learn-info">
+                <div class="learn-title">客户技术总监汇报 6 段式</div>
+                <div class="learn-meta">最佳实践 · 14 分钟</div>
+              </div>
+            </div>
+            <div class="learn-item">
+              <div class="learn-icon"><svg class="ico"><use href="#i-star"/></svg></div>
+              <div class="learn-info">
+                <div class="learn-title">某银行数据中台金牌案例</div>
+                <div class="learn-meta">匹配度 92% · 推荐学习</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <aside class="copilot" id="copilot"></aside>
+  </div>
+
+  <script src="../assets/js/icons.js"></script>
+  <script src="../assets/js/copilot.js"></script>
+  <script src="../assets/js/mention.js"></script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

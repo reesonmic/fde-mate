@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务中心 · FDE 工作台</title>
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/copilot.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body data-page="tasks">
+  <div id="svg-sprite-mount"></div>
+  <div class="app">
+    <header class="header"></header>
+    <aside class="nav"></aside>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">任务中心</h1>
+          <p class="page-subtitle">8 项待办 · 1 项逾期 · 本周新增 5 项</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-default"><svg class="ico ico-sm"><use href="#i-upload"/></svg>导入</button>
+          <button class="btn btn-default"><svg class="ico ico-sm"><use href="#i-grid"/></svg>看板视图</button>
+          <button class="btn btn-primary"><svg class="ico ico-sm"><use href="#i-plus"/></svg>新建任务</button>
+        </div>
+      </div>
+
+      <!-- 状态筛选 tabs（pill 风格） -->
+      <div class="status-tabs">
+        <div class="status-tab active"><span class="status-dot info"></span>全部 <b>17</b></div>
+        <div class="status-tab"><span class="status-dot info"></span>待办 <b>3</b></div>
+        <div class="status-tab"><span class="status-dot warning"></span>进行中 <b>3</b></div>
+        <div class="status-tab"><span class="status-dot info"></span>复核中 <b>1</b></div>
+        <div class="status-tab"><span class="status-dot success"></span>已完成 <b>10</b></div>
+        <div class="status-tab" style="margin-left:auto;color:var(--danger);"><span class="status-dot danger"></span>本周到期 <b>5</b></div>
+        <div class="status-tab" style="color:var(--danger);"><span class="status-dot danger"></span>逾期 <b>2</b></div>
+      </div>
+
+      <!-- 4 列 Kanban（蓝本核心：替代原表格） -->
+      <div class="dashboard-board">
+        <div class="kanban">
+          <!-- 待办 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot info"></span>待办 <b style="color:var(--text-1);margin-left:4px;">3</b></span>
+              <button class="btn-text"><svg class="ico ico-sm"><use href="#i-plus"/></svg></button>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag danger">P0</span><span class="tag blue">阿里云A</span></div>
+              <div class="kanban-card-title">完成客户A的 POC 方案</div>
+              <div class="kanban-card-meta">
+                <span class="text-warning"><svg class="ico ico-sm"><use href="#i-clock"/></svg>明天 18:00</span>
+                <span style="margin-left:auto;"><div class="avatar-mini">吾</div></span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span><span class="tag blue">客户B</span></div>
+              <div class="kanban-card-title">数据接入测试用例编写</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-clock"/></svg>5-05
+                <span style="margin-left:auto;"><div class="avatar-mini" style="background:#722ED1;">张</div></span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span><span class="tag blue">客户D</span></div>
+              <div class="kanban-card-title">需求评审会议材料准备</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-clock"/></svg>5-06
+                <span style="margin-left:auto;"><div class="avatar-mini">吾</div></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 进行中 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot warning"></span>进行中 <b style="color:var(--text-1);margin-left:4px;">3</b></span>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag danger">P0</span><span class="tag blue">阿里云A</span></div>
+              <div class="kanban-card-title">阿里云A 数据接入开发</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-history"/></svg>已 2 天 · 60%
+                <span style="margin-left:auto;"><div class="avatar-mini">吾</div></span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span></div>
+              <div class="kanban-card-title">本周项目周报编写</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-clock"/></svg>本周五
+                <span style="margin-left:auto;"><div class="avatar-mini">吾</div></span>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag danger">P0</span><span class="tag blue">客户C</span></div>
+              <div class="kanban-card-title">客户C 风险跟踪与协调</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-history"/></svg>持续中
+                <span style="margin-left:auto;"><div class="avatar-mini">吾</div></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 复核中 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot info"></span>复核中 <b style="color:var(--text-1);margin-left:4px;">1</b></span>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-tags"><span class="tag warning">P1</span></div>
+              <div class="kanban-card-title">技术分享 PPT 评审</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-eye"/></svg>李四 复核中
+                <span style="margin-left:auto;"><div class="avatar-mini" style="background:#13C2C2;">李</div></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 已完成 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span><span class="status-dot success"></span>已完成 <b style="color:var(--text-1);margin-left:4px;">10</b></span>
+            </div>
+            <div class="kanban-card" style="opacity:0.75;">
+              <div class="kanban-card-tags"><span class="tag green">已完成</span><span class="tag blue">阿里云A</span></div>
+              <div class="kanban-card-title">数据字典 v1.3 编写</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-check-circle"/></svg>4-25 完成
+                <span style="margin-left:auto;"><div class="avatar-mini">吾</div></span>
+              </div>
+            </div>
+            <div class="kanban-card" style="opacity:0.75;">
+              <div class="kanban-card-tags"><span class="tag green">已完成</span><span class="tag blue">客户B</span></div>
+              <div class="kanban-card-title">客户B 联调环境部署</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-check-circle"/></svg>4-24 完成
+                <span style="margin-left:auto;"><div class="avatar-mini" style="background:#722ED1;">张</div></span>
+              </div>
+            </div>
+            <div class="kanban-card" style="opacity:0.75;">
+              <div class="kanban-card-tags"><span class="tag green">已完成</span></div>
+              <div class="kanban-card-title">FDE 周技术分享</div>
+              <div class="kanban-card-meta">
+                <svg class="ico ico-sm"><use href="#i-check-circle"/></svg>4-23 完成
+                <span style="margin-left:auto;"><div class="avatar-mini" style="background:#FA8C16;">王</div></span>
+              </div>
+            </div>
+            <div style="text-align:center;color:var(--text-3);font-size:11px;padding:8px 0;">还有 7 项已完成 · 查看全部</div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <aside class="copilot" id="copilot"></aside>
+  </div>
+
+  <script src="../assets/js/icons.js"></script>
+  <script src="../assets/js/copilot.js"></script>
+  <script src="../assets/js/mention.js"></script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

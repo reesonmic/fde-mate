@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FDE 教练 · FDE 工作台</title>
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/copilot.css">
+  <link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body data-page="coach">
+  <div id="svg-sprite-mount"></div>
+  <div class="app">
+    <header class="header"></header>
+    <aside class="nav"></aside>
+    <main class="main">
+      <style>
+        /* 最佳实践卡 */
+        .practice-lib-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .practice-lib-card {
+          background: #fff; border: 1px solid var(--border-light); border-radius: 8px;
+          padding: 16px; cursor: pointer; transition: all 0.18s;
+          display: flex; flex-direction: column; gap: 8px;
+        }
+        .practice-lib-card:hover {
+          border-color: var(--primary); transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+        }
+        .practice-lib-card-head { display: flex; align-items: center; gap: 10px; }
+        .practice-lib-icon {
+          width: 36px; height: 36px; border-radius: 8px;
+          background: var(--gradient-card); color: var(--primary);
+          display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .practice-lib-card-title { font-size: 14px; font-weight: 600; color: var(--text-1); flex: 1; }
+        .practice-lib-card-desc { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+        .practice-lib-card-meta {
+          display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-4);
+          margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border-light);
+        }
+        .practice-lib-card-meta .tag { font-size: 10px; padding: 1px 6px; }
+
+        /* SOP 卡 */
+        .sop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .sop-card {
+          display: flex; align-items: center; gap: 14px;
+          padding: 14px; background: var(--bg-page); border-radius: 8px;
+          transition: all 0.18s;
+        }
+        .sop-card:hover { background: var(--bg-hover); }
+        .sop-icon {
+          width: 44px; height: 44px; border-radius: 10px;
+          background: var(--gradient-card); display: inline-flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .sop-info { flex: 1; min-width: 0; }
+        .sop-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+        .sop-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+      </style>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">FDE 教练 <span class="assistant-badge coach sm" style="margin-left:8px;">C</span></h1>
+          <p class="page-subtitle">FDE 专家陪你 · 方法论 + 最佳实践 + 专家 AI 问答</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-default"><svg class="ico ico-sm"><use href="#i-trending-up"/></svg>我的学习进度</button>
+          <button class="btn btn-primary" onclick="document.querySelector('.copilot-input')?.focus()"><svg class="ico ico-sm"><use href="#i-message-circle"/></svg>向专家提问</button>
+        </div>
+      </div>
+
+      <!-- 4 大入口卡（移除 AI 对练，新增 FDE 专家 AI） -->
+      <section class="entry-cards">
+        <div class="entry-card">
+          <div class="entry-icon" style="background:linear-gradient(135deg,#13C2C2,#08979C);">
+            <svg class="ico ico-xl" style="color:#fff;"><use href="#i-message-circle"/></svg>
+          </div>
+          <div class="entry-name">FDE 专家 AI 问答</div>
+          <div class="entry-desc">10 年经验专家 AI · 7×24 在线</div>
+          <div class="entry-stat">128 次提问 · 24h 平均响应</div>
+        </div>
+        <div class="entry-card">
+          <div class="entry-icon" style="background:linear-gradient(135deg,#1677FF,#0958D9);">
+            <svg class="ico ico-xl" style="color:#fff;"><use href="#i-bookmark"/></svg>
+          </div>
+          <div class="entry-name">最佳实践库</div>
+          <div class="entry-desc">5 大场景 · 实战可执行 SOP</div>
+          <div class="entry-stat">86 篇 · 智能场景匹配</div>
+        </div>
+        <div class="entry-card">
+          <div class="entry-icon" style="background:linear-gradient(135deg,#722ED1,#531DAB);">
+            <svg class="ico ico-xl" style="color:#fff;"><use href="#i-book"/></svg>
+          </div>
+          <div class="entry-name">方法论库</div>
+          <div class="entry-desc">FDE 全场景标准 SOP + 模板</div>
+          <div class="entry-stat">128 篇 · 32 个模板</div>
+        </div>
+        <div class="entry-card">
+          <div class="entry-icon" style="background:linear-gradient(135deg,#FA8C16,#D46B08);">
+            <svg class="ico ico-xl" style="color:#fff;"><use href="#i-map"/></svg>
+          </div>
+          <div class="entry-name">学习路径</div>
+          <div class="entry-desc">P5/P6/P7 个性化成长地图</div>
+          <div class="entry-stat">P5 路径 · 已完成 8/24</div>
+        </div>
+      </section>
+
+      <!-- 最佳实践库（5 场景 tabs） -->
+      <section class="card-section">
+        <div class="card-section-header">
+          <h3 class="card-section-title"><svg class="ico"><use href="#i-bookmark"/></svg>最佳实践库</h3>
+          <a class="btn btn-default btn-sm">查看全部 <b>86</b></a>
+        </div>
+        <div class="card-section-body">
+          <div class="status-tabs" style="border:none;background:transparent;padding:0 0 12px;margin:0;">
+            <div class="status-tab">项目启动 <b>14</b></div>
+            <div class="status-tab active">客户沟通 <b>22</b></div>
+            <div class="status-tab">技术方案 <b>18</b></div>
+            <div class="status-tab">风险管控 <b>16</b></div>
+            <div class="status-tab">验收交付 <b>16</b></div>
+          </div>
+          <div class="practice-lib-grid">
+            <div class="practice-lib-card">
+              <div class="practice-lib-card-head">
+                <div class="practice-lib-icon"><svg class="ico"><use href="#i-shield-check"/></svg></div>
+                <div class="practice-lib-card-title">客户验收冲突 · 4 步化解法</div>
+              </div>
+              <div class="practice-lib-card-desc">先共情后澄清 · 锁定核心争议 · 提出可行方案 · 闭环跟进</div>
+              <div class="practice-lib-card-meta">
+                <span class="tag yellow">高频</span>
+                <span>验收阶段 · 12 分钟</span>
+                <span style="margin-left:auto;">⭐ 4.9</span>
+              </div>
+            </div>
+            <div class="practice-lib-card">
+              <div class="practice-lib-card-head">
+                <div class="practice-lib-icon" style="background:#FFF7E6;color:#FA8C16;"><svg class="ico"><use href="#i-handshake"/></svg></div>
+                <div class="practice-lib-card-title">初次拜访客户 · 30 分钟破冰</div>
+              </div>
+              <div class="practice-lib-card-desc">3 段式开场 + 5 个必问问题 + 1 个价值锚点</div>
+              <div class="practice-lib-card-meta">
+                <span class="tag blue">入门</span>
+                <span>启动阶段 · 8 分钟</span>
+                <span style="margin-left:auto;">⭐ 4.8</span>
+              </div>
+            </div>
+            <div class="practice-lib-card">
+              <div class="practice-lib-card-head">
+                <div class="practice-lib-icon" style="background:#F6FFED;color:#52C41A;"><svg class="ico"><use href="#i-file-doc"/></svg></div>
+                <div class="practice-lib-card-title">项目周报怎么让客户认可</div>
+              </div>
+              <div class="practice-lib-card-desc">3 段式结构 · 进展量化 · 风险前置 · 求助清晰</div>
+              <div class="practice-lib-card-meta">
+                <span class="tag green">推荐</span>
+                <span>实施阶段 · 10 分钟</span>
+                <span style="margin-left:auto;">⭐ 5.0</span>
+              </div>
+            </div>
+            <div class="practice-lib-card">
+              <div class="practice-lib-card-head">
+                <div class="practice-lib-icon" style="background:#FFF1F0;color:#FF4D4F;"><svg class="ico"><use href="#i-heart"/></svg></div>
+                <div class="practice-lib-card-title">客户失望情绪安抚 SOP</div>
+              </div>
+              <div class="practice-lib-card-desc">识别情绪信号 · 共情语言模板 · 转化为行动承诺</div>
+              <div class="practice-lib-card-meta">
+                <span class="tag red">实战</span>
+                <span>全阶段 · 15 分钟</span>
+                <span style="margin-left:auto;">⭐ 4.9</span>
+              </div>
+            </div>
+            <div class="practice-lib-card">
+              <div class="practice-lib-card-head">
+                <div class="practice-lib-icon" style="background:#F9F0FF;color:#722ED1;"><svg class="ico"><use href="#i-help-circle"/></svg></div>
+                <div class="practice-lib-card-title">需求评审会 5 必问</div>
+              </div>
+              <div class="practice-lib-card-desc">业务目标 / 验收标准 / 优先级 / 边界 / 决策人</div>
+              <div class="practice-lib-card-meta">
+                <span class="tag blue">入门</span>
+                <span>启动+实施 · 6 分钟</span>
+                <span style="margin-left:auto;">⭐ 4.7</span>
+              </div>
+            </div>
+            <div class="practice-lib-card">
+              <div class="practice-lib-card-head">
+                <div class="practice-lib-icon" style="background:#E6F4FF;color:#1677FF;"><svg class="ico"><use href="#i-target"/></svg></div>
+                <div class="practice-lib-card-title">客户技术总监汇报 6 段式</div>
+              </div>
+              <div class="practice-lib-card-desc">背景 → 进展 → 价值 → 风险 → 求助 → Next Step</div>
+              <div class="practice-lib-card-meta">
+                <span class="tag yellow">高频</span>
+                <span>全阶段 · 14 分钟</span>
+                <span style="margin-left:auto;">⭐ 4.8</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 方法论库 · 热门 SOP -->
+      <section class="card-section">
+        <div class="card-section-header">
+          <h3 class="card-section-title"><svg class="ico"><use href="#i-book"/></svg>方法论库 · 热门 SOP</h3>
+          <a class="btn btn-default btn-sm">查看全部 <b>128</b></a>
+        </div>
+        <div class="card-section-body">
+          <div class="sop-grid">
+            <div class="sop-card">
+              <div class="sop-icon"><svg class="ico ico-lg ico-primary"><use href="#i-rocket"/></svg></div>
+              <div class="sop-info">
+                <div class="sop-name">交付项目启动 SOP</div>
+                <div class="sop-meta">12 步标准流程 · 含 5 个模板 · 已下载 1280 次</div>
+              </div>
+              <button class="btn btn-default btn-sm"><svg class="ico ico-sm"><use href="#i-download"/></svg>下载</button>
+            </div>
+            <div class="sop-card">
+              <div class="sop-icon" style="background:#F6FFED;"><svg class="ico ico-lg ico-success"><use href="#i-check-circle"/></svg></div>
+              <div class="sop-info">
+                <div class="sop-name">客户验收 SOP</div>
+                <div class="sop-meta">8 步验收流程 · 含 UAT 用例模板 · 已下载 968 次</div>
+              </div>
+              <button class="btn btn-default btn-sm"><svg class="ico ico-sm"><use href="#i-download"/></svg>下载</button>
+            </div>
+            <div class="sop-card">
+              <div class="sop-icon" style="background:#FFF1F0;"><svg class="ico ico-lg ico-danger"><use href="#i-alert-triangle"/></svg></div>
+              <div class="sop-info">
+                <div class="sop-name">风险升级 SOP</div>
+                <div class="sop-meta">3 级升级机制 · 含邮件模板 · 已下载 642 次</div>
+              </div>
+              <button class="btn btn-default btn-sm"><svg class="ico ico-sm"><use href="#i-download"/></svg>下载</button>
+            </div>
+            <div class="sop-card">
+              <div class="sop-icon" style="background:#FFF7E6;"><svg class="ico ico-lg" style="color:#FA8C16;"><use href="#i-file-doc"/></svg></div>
+              <div class="sop-info">
+                <div class="sop-name">项目周报模板包</div>
+                <div class="sop-meta">5 种风格周报 · 含 PPT/Word/Markdown · 已下载 2145 次</div>
+              </div>
+              <button class="btn btn-default btn-sm"><svg class="ico ico-sm"><use href="#i-download"/></svg>下载</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 为你推荐 -->
+      <section class="card-section">
+        <div class="card-section-header">
+          <h3 class="card-section-title"><svg class="ico"><use href="#i-lightbulb"/></svg>为你推荐</h3>
+          <span class="badge-tip">基于当前项目阶段「实施中」</span>
+        </div>
+        <div class="card-section-body">
+          <div class="recommend-grid">
+            <div class="recommend-card">
+              <div class="recommend-card-tag">最佳实践</div>
+              <div class="recommend-card-title">数据中台交付 · 实施阶段 SOP</div>
+              <div class="recommend-card-desc">8 步标准流程 + 3 大注意事项 + 5 个常见坑点</div>
+              <div class="recommend-card-meta">12 分钟 · ⭐ 4.9</div>
+            </div>
+            <div class="recommend-card">
+              <div class="recommend-card-tag">案例</div>
+              <div class="recommend-card-title">某银行数据中台金牌案例</div>
+              <div class="recommend-card-desc">匹配度 92% · 同样 4 个月周期 + 类似数据规模</div>
+              <div class="recommend-card-meta">15 分钟 · ⭐ 5.0</div>
+            </div>
+            <div class="recommend-card">
+              <div class="recommend-card-tag">专家问答</div>
+              <div class="recommend-card-title">数据接入滞后 5 天怎么挽救</div>
+              <div class="recommend-card-desc">本周热门问题 · 专家 AI 给出 3 套挽救方案</div>
+              <div class="recommend-card-meta">10 分钟 · ⭐ 4.8</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <aside class="copilot" id="copilot"></aside>
+  </div>
+
+  <script src="../assets/js/icons.js"></script>
+  <script src="../assets/js/copilot.js"></script>
+  <script src="../assets/js/mention.js"></script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

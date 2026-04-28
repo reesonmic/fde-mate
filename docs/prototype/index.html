@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FDE 工作台 · AI 原生交付工作中枢</title>
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+</head>
+<body class="home">
+  <div id="svg-sprite-mount"></div>
+
+  <!-- ========== 顶部 Header ========== -->
+  <header class="home-header">
+    <a class="logo" href="index.html" style="width:auto;">
+      <span class="logo-mark">F</span>
+      <span class="logo-name">FDE 工作台</span>
+    </a>
+    <nav class="home-header-nav">
+      <a href="#features">特性</a>
+      <a href="#modules">模块</a>
+      <a href="#copilots">AI 助手</a>
+      <a href="#screens">截图</a>
+      <a href="../FDE工作台产品需求文档.md" target="_blank">PRD 文档</a>
+    </nav>
+    <a class="btn btn-primary" href="pages/dashboard.html">
+      进入工作台
+      <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg>
+    </a>
+  </header>
+
+  <!-- ========== Hero ========== -->
+  <section class="hero">
+    <div class="hero-badge">
+      <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+      v1.0 · AI 原生工作台
+    </div>
+    <h1 class="hero-title">
+      让 FDE 交付<br/>
+      <span class="highlight">更可控、更高效、更专业</span>
+    </h1>
+    <p class="hero-subtitle">
+      面向 Field Delivery Engineer（现场交付工程师）的 AI 原生工作台。
+      4 个嵌入式 Copilot 助手 + 全场景知识沉淀，一站式管理任务、项目、客户、文件。
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="pages/dashboard.html">
+        立即体验
+        <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg>
+      </a>
+      <a class="btn btn-default btn-lg" href="../FDE工作台产品需求文档.md" target="_blank">
+        <svg class="ico ico-sm"><use href="#i-book"/></svg>
+        查看 PRD
+      </a>
+    </div>
+  </section>
+
+  <!-- ========== 特性 ========== -->
+  <section class="home-section" id="features">
+    <h2 class="home-section-title">三大核心价值</h2>
+    <p class="home-section-subtitle">从信息分散到一站式中枢，从经验依赖到 AI 增强</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-wrap">
+          <svg class="ico ico-xl"><use href="#i-dashboard"/></svg>
+        </div>
+        <div class="feature-title">一站式工作中枢</div>
+        <div class="feature-desc">任务 / 项目 / 客户 / 文件 / 学习 全部聚合，告别多系统跳转，关键信息一眼可见。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap">
+          <svg class="ico ico-xl"><use href="#i-sparkles"/></svg>
+        </div>
+        <div class="feature-title">AI Copilot 嵌入每场景</div>
+        <div class="feature-desc">4 个专属助手（任务 T / 项目 P / 教练 C / 文件 F）随场景自动切换，写操作必预览。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon-wrap">
+          <svg class="ico ico-xl"><use href="#i-trending-up"/></svg>
+        </div>
+        <div class="feature-title">FDE 能力持续成长</div>
+        <div class="feature-desc">方法论库 + 案例库 + AI 对练，把团队最佳实践沉淀给每一位 FDE，新人快速 Onboard。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 8 大模块 ========== -->
+  <section class="home-section" id="modules">
+    <h2 class="home-section-title">8 大功能模块</h2>
+    <p class="home-section-subtitle">点击任意模块进入对应子页查看交互原型</p>
+    <div class="modules-grid">
+      <a class="module-card" href="pages/dashboard.html">
+        <div class="module-icon-wrap color-1"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-dashboard"/></svg></div>
+        <div class="module-title">工作台</div>
+        <div class="module-desc">个性化首页，今日聚焦、任务看板、项目进度一览</div>
+        <div class="module-arrow">进入 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></div>
+      </a>
+      <a class="module-card" href="pages/tasks.html">
+        <div class="module-icon-wrap color-2"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-task"/></svg></div>
+        <div class="module-title">任务中心</div>
+        <div class="module-desc">含任务助手 T，创建/查询/批量调整全 AI 增强</div>
+        <div class="module-arrow">进入 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></div>
+      </a>
+      <a class="module-card" href="pages/project-detail.html">
+        <div class="module-icon-wrap color-3"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-project"/></svg></div>
+        <div class="module-title">项目空间</div>
+        <div class="module-desc">含项目助手 P，自动绑定项目，风险/周报/调整全自动</div>
+        <div class="module-arrow">进入 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></div>
+      </a>
+      <a class="module-card" href="pages/customers.html">
+        <div class="module-icon-wrap color-4"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-users"/></svg></div>
+        <div class="module-title">客户空间</div>
+        <div class="module-desc">客户全景画像、联系人、商机、历史项目</div>
+        <div class="module-arrow">进入 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></div>
+      </a>
+      <a class="module-card" href="pages/coach.html">
+        <div class="module-icon-wrap color-5"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-compass"/></svg></div>
+        <div class="module-title">FDE 教练</div>
+        <div class="module-desc">含教练助手 C，方法论 + 案例 + AI 对练</div>
+        <div class="module-arrow">进入 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></div>
+      </a>
+      <a class="module-card" href="pages/files.html">
+        <div class="module-icon-wrap color-6"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-folder"/></svg></div>
+        <div class="module-title">文件中心</div>
+        <div class="module-desc">含文件助手 F，智能搜索/总结/批量归档</div>
+        <div class="module-arrow">进入 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></div>
+      </a>
+      <a class="module-card" href="pages/ai-chat.html">
+        <div class="module-icon-wrap color-7"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-sparkles"/></svg></div>
+        <div class="module-title">AI 对话</div>
+        <div class="module-desc">全局对话中心，跨场景历史 + @ 引用任意对象</div>
+        <div class="module-arrow">进入 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></div>
+      </a>
+      <a class="module-card" href="#">
+        <div class="module-icon-wrap color-8"><svg class="ico ico-lg" style="color:#fff;"><use href="#i-settings"/></svg></div>
+        <div class="module-title">系统设置</div>
+        <div class="module-desc">个人偏好、通知、AI 模型选择、安全</div>
+        <div class="module-arrow">敬请期待</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========== 4 助手徽章墙 ========== -->
+  <section class="home-section" id="copilots">
+    <h2 class="home-section-title">4 个 AI Copilot 助手</h2>
+    <p class="home-section-subtitle">随页面自动切换，写操作必先预览，让 AI 真正可控</p>
+    <div class="copilots-wall">
+      <div class="copilot-card">
+        <span class="assistant-badge task xl">T</span>
+        <div class="copilot-card-name">任务助手</div>
+        <div class="copilot-card-meta">服务于 任务中心</div>
+        <div class="copilot-card-abilities">
+          <div class="copilot-card-abilities-item"><span class="status-dot info"></span>智能创建任务（自然语言）</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot info"></span>批量调整（延期/优先级）</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot info"></span>工作量分析与排期建议</div>
+        </div>
+      </div>
+      <div class="copilot-card">
+        <span class="assistant-badge project xl">P</span>
+        <div class="copilot-card-name">项目助手</div>
+        <div class="copilot-card-meta">服务于 项目详情</div>
+        <div class="copilot-card-abilities">
+          <div class="copilot-card-abilities-item"><span class="status-dot" style="background:#722ED1;"></span>智能风险分析</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot" style="background:#722ED1;"></span>周报/月报自动生成</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot" style="background:#722ED1;"></span>成员/里程碑调整</div>
+        </div>
+      </div>
+      <div class="copilot-card">
+        <span class="assistant-badge coach xl">C</span>
+        <div class="copilot-card-name">教练助手</div>
+        <div class="copilot-card-meta">服务于 FDE 教练</div>
+        <div class="copilot-card-abilities">
+          <div class="copilot-card-abilities-item"><span class="status-dot" style="background:#13C2C2;"></span>Next Step 个性化建议</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot" style="background:#13C2C2;"></span>相似案例智能推荐</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot" style="background:#13C2C2;"></span>AI 对练剧本演练</div>
+        </div>
+      </div>
+      <div class="copilot-card">
+        <span class="assistant-badge files xl">F</span>
+        <div class="copilot-card-name">文件助手</div>
+        <div class="copilot-card-meta">服务于 文件中心</div>
+        <div class="copilot-card-abilities">
+          <div class="copilot-card-abilities-item"><span class="status-dot warning"></span>智能搜索文档</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot warning"></span>文档总结/版本对比</div>
+          <div class="copilot-card-abilities-item"><span class="status-dot warning"></span>批量归档操作</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 截图墙 ========== -->
+  <section class="home-section" id="screens">
+    <h2 class="home-section-title">页面截图预览</h2>
+    <p class="home-section-subtitle">点击查看对应交互原型</p>
+    <div class="screens-grid">
+      <a class="screen-card" href="pages/dashboard.html">
+        <div class="screen-thumb">
+          <div class="screen-thumb-mock">
+            <div class="mock-bar tall"></div>
+            <div class="mock-bar short"></div>
+            <div style="display:flex;gap:4px;">
+              <div class="mock-block" style="height:30px;"></div>
+              <div class="mock-block" style="height:30px;"></div>
+              <div class="mock-block" style="height:30px;"></div>
+              <div class="mock-block" style="height:30px;"></div>
+            </div>
+            <div class="mock-block"></div>
+          </div>
+        </div>
+        <div class="screen-info">
+          <div class="screen-title">工作台 Dashboard</div>
+          <div class="screen-desc">欢迎横幅 + 4 统计卡 + 任务看板</div>
+        </div>
+      </a>
+      <a class="screen-card" href="pages/tasks.html">
+        <div class="screen-thumb">
+          <div class="screen-thumb-mock">
+            <div class="mock-bar"></div>
+            <div class="mock-bar short"></div>
+            <div class="mock-block"></div>
+            <div class="mock-bar"></div>
+          </div>
+        </div>
+        <div class="screen-info">
+          <div class="screen-title">任务中心 + T 助手</div>
+          <div class="screen-desc">任务列表 + 蓝色任务助手</div>
+        </div>
+      </a>
+      <a class="screen-card" href="pages/project-detail.html">
+        <div class="screen-thumb">
+          <div class="screen-thumb-mock">
+            <div style="display:flex;gap:4px;align-items:center;">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--success);"></div>
+              <div style="flex:1;"><div class="mock-bar"></div><div class="mock-bar short" style="margin-top:4px;"></div></div>
+            </div>
+            <div class="mock-block"></div>
+            <div class="mock-bar"></div>
+          </div>
+        </div>
+        <div class="screen-info">
+          <div class="screen-title">项目详情 + P 助手</div>
+          <div class="screen-desc">健康度环 + 紫色项目助手</div>
+        </div>
+      </a>
+      <a class="screen-card" href="pages/coach.html">
+        <div class="screen-thumb">
+          <div class="screen-thumb-mock">
+            <div class="mock-bar tall"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;">
+              <div class="mock-block" style="height:36px;"></div>
+              <div class="mock-block" style="height:36px;"></div>
+              <div class="mock-block" style="height:36px;"></div>
+              <div class="mock-block" style="height:36px;"></div>
+            </div>
+            <div class="mock-bar"></div>
+          </div>
+        </div>
+        <div class="screen-info">
+          <div class="screen-title">FDE 教练 + C 助手</div>
+          <div class="screen-desc">4 入口卡 + 青色教练助手</div>
+        </div>
+      </a>
+      <a class="screen-card" href="pages/files.html">
+        <div class="screen-thumb">
+          <div class="screen-thumb-mock">
+            <div style="display:flex;gap:4px;height:100%;">
+              <div style="width:30%;background:var(--bg-page);border-radius:4px;"></div>
+              <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+                <div class="mock-block"></div>
+                <div class="mock-block" style="background:rgba(250,140,22,0.3);border:1px solid #FA8C16;"></div>
+                <div class="mock-block"></div>
+                <div class="mock-block"></div>
+                <div class="mock-block"></div>
+                <div class="mock-block"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-info">
+          <div class="screen-title">文件中心 + F 助手</div>
+          <div class="screen-desc">文件树 + 橙色文件助手</div>
+        </div>
+      </a>
+      <a class="screen-card" href="pages/ai-chat.html">
+        <div class="screen-thumb">
+          <div class="screen-thumb-mock">
+            <div style="display:flex;gap:4px;height:100%;">
+              <div style="width:25%;background:var(--bg-page);border-radius:4px;"></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                <div class="mock-bar short"></div>
+                <div class="mock-block"></div>
+                <div class="mock-bar"></div>
+              </div>
+              <div style="width:25%;background:var(--bg-page);border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-info">
+          <div class="screen-title">AI 对话中心</div>
+          <div class="screen-desc">三栏 + 跨场景历史</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========== Footer ========== -->
+  <footer class="home-footer">
+    <div>FDE 工作台 v1.0 · 由阿里巴巴 FDE 团队设计 · 2026 Q2</div>
+    <div style="margin-top:6px;">
+      <a href="../FDE工作台产品需求文档.md" target="_blank">产品需求文档</a>
+      ·
+      <a href="pages/dashboard.html">进入工作台</a>
+    </div>
+  </footer>
+
+  <script src="assets/js/icons.js"></script>
+</body>
+</html>

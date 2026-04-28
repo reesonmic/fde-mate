@@ -1,0 +1,274 @@
+/* ==========================================================================
+   FDE 工作台 · AI Copilot 侧边栏样式
+   ========================================================================== */
+
+/* ========== Copilot Header ========== */
+.copilot-header {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.copilot.collapsed .copilot-header { display: none; }
+.copilot-header-info { flex: 1; min-width: 0; }
+.copilot-header-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.copilot-header-meta { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.copilot-header-actions { display: flex; gap: 4px; }
+
+/* ========== Copilot Context（上下文 tag 区） ========== */
+.copilot-context {
+  padding: 10px 16px; border-bottom: 1px solid var(--border-light);
+  background: #FAFBFC;
+}
+.copilot.collapsed .copilot-context { display: none; }
+.copilot-context-label {
+  font-size: 11px; color: var(--text-3); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 4px;
+}
+.copilot-context-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.copilot-context-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; background: var(--primary-bg); color: var(--primary);
+  border-radius: 12px; font-size: 11px; font-weight: 500;
+}
+.copilot-context-tag .close { color: var(--primary); cursor: pointer; opacity: 0.6; }
+.copilot-context-tag .close:hover { opacity: 1; }
+.copilot-context-add {
+  font-size: 11px; color: var(--text-3); padding: 3px 8px; cursor: pointer;
+  border: 1px dashed var(--border); border-radius: 12px;
+}
+.copilot-context-add:hover { color: var(--primary); border-color: var(--primary); }
+
+/* ========== Copilot Body（消息流） ========== */
+.copilot-body {
+  flex: 1; overflow-y: auto; padding: 16px;
+}
+.copilot.collapsed .copilot-body { display: none; }
+.copilot-msg { margin-bottom: 16px; }
+.copilot-msg-user { display: flex; justify-content: flex-end; }
+.copilot-msg-user .copilot-bubble {
+  background: var(--primary); color: #fff;
+  padding: 10px 14px; border-radius: 12px 4px 12px 12px;
+  font-size: 13px; line-height: 1.6; max-width: 85%;
+}
+.copilot-msg-ai { display: flex; gap: 8px; align-items: flex-start; }
+.copilot-msg-avatar-wrap {
+  flex-shrink: 0; display: inline-flex; align-items: flex-start; padding-top: 2px;
+}
+.copilot-msg-ai .copilot-bubble {
+  flex: 1; min-width: 0;
+  background: var(--bg-page); padding: 12px 14px;
+  border-radius: 4px 12px 12px 12px;
+  font-size: 13px; line-height: 1.7;
+}
+.copilot-msg-meta {
+  font-size: 11px; color: var(--text-4); margin-top: 4px; padding: 0 4px;
+}
+.copilot-msg-user .copilot-msg-meta { text-align: right; }
+
+/* ========== 操作预览卡片 actionCard ========== */
+.action-card {
+  margin-top: 10px; border: 1px solid var(--border); border-radius: var(--radius-card);
+  overflow: hidden; background: #fff;
+}
+.action-card-header {
+  padding: 10px 12px; background: var(--gradient-card);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600;
+  border-bottom: 1px solid var(--border-light);
+}
+.action-card-title {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 600; color: var(--text-1);
+}
+.action-card-header .action-status {
+  margin-left: auto; padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.action-status.pending { background: #FFF7E6; color: var(--warning); }
+.action-status.running { background: var(--primary-bg); color: var(--primary); }
+.action-status.done    { background: #F6FFED; color: var(--success); }
+.action-card-body { padding: 12px; font-size: 12px; }
+.action-row { display: flex; padding: 4px 0; gap: 8px; }
+.action-row-label { color: var(--text-3); min-width: 64px; }
+.action-row-value { color: var(--text-1); font-weight: 500; flex: 1; word-break: break-all; }
+.action-row-value.del { text-decoration: line-through; color: var(--text-4); }
+.action-row-value.add { color: var(--primary); }
+.action-impact {
+  margin-top: 8px; padding: 8px; background: #FFF7E6;
+  border-radius: var(--radius-sm); font-size: 11px; color: var(--warning);
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+.action-impact-list {
+  margin-top: 6px; padding: 6px 0 0; max-height: 100px; overflow: auto;
+  border-top: 1px dashed #FFE7BA; width: 100%;
+}
+.action-impact-list-item { padding: 2px 0; color: var(--text-2); }
+.action-card-footer {
+  padding: 10px 12px; border-top: 1px solid var(--border-light);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+
+/* ========== 报告卡片 report ========== */
+.report-card {
+  margin-top: 10px; padding: 12px; background: #fff;
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+}
+.report-card-title {
+  font-size: 12px; font-weight: 600; color: var(--text-1);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+}
+.report-risk-row {
+  display: flex; align-items: flex-start; gap: 8px; padding: 6px 0;
+  font-size: 12px; color: var(--text-2); border-top: 1px dashed var(--border-light);
+}
+.report-risk-row:first-of-type { border-top: none; padding-top: 0; }
+.risk-level {
+  flex-shrink: 0; padding: 1px 7px; border-radius: 10px;
+  font-size: 10px; font-weight: 600;
+}
+.risk-level.high { background: #FFF1F0; color: var(--danger); }
+.risk-level.mid  { background: #FFF7E6; color: var(--warning); }
+.risk-level.low  { background: #F6FFED; color: var(--success); }
+
+/* ========== Next Steps 列表 ========== */
+.next-step-list { margin-top: 10px; }
+.next-step-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 8px 0; border-top: 1px dashed var(--border-light);
+  font-size: 12px; color: var(--text-2); line-height: 1.6;
+}
+.next-step-item:first-child { border-top: none; padding-top: 0; }
+.next-step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--primary-bg); color: var(--primary);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ========== 搜索结果卡片 searchResults ========== */
+.search-results-card {
+  margin-top: 10px; border: 1px solid var(--border); border-radius: var(--radius-card);
+  background: #fff; overflow: hidden;
+}
+.search-result-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer; transition: background 0.15s;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--bg-page); }
+.search-result-info { flex: 1; min-width: 0; }
+.search-result-name {
+  font-size: 12px; font-weight: 500; color: var(--text-1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.search-result-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* ========== Copilot 输入区 ========== */
+.copilot-input-area {
+  padding: 12px 16px; border-top: 1px solid var(--border);
+  background: #fff;
+}
+.copilot.collapsed .copilot-input-area { display: none; }
+.copilot-suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+}
+.copilot-suggestion-chip {
+  padding: 4px 10px; background: var(--bg-page);
+  border-radius: 12px; font-size: 11px; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.copilot-suggestion-chip:hover { background: var(--primary-bg); color: var(--primary); }
+.copilot-input-box {
+  background: var(--bg-page); border-radius: 10px; padding: 10px 12px;
+  border: 1px solid transparent; transition: all 0.2s;
+}
+.copilot-input-box:focus-within { border-color: var(--primary); background: #fff; }
+.copilot-input {
+  width: 100%; background: transparent; font-size: 13px;
+  line-height: 1.5; min-height: 36px; max-height: 100px; resize: none;
+}
+.copilot-input-tools {
+  display: flex; align-items: center; gap: 4px; margin-top: 6px;
+}
+.copilot-tool-btn {
+  padding: 3px 8px; border-radius: 4px; font-size: 11px; color: var(--text-3);
+  cursor: pointer;
+}
+.copilot-tool-btn:hover { background: #fff; color: var(--primary); }
+.copilot-send-btn {
+  margin-left: auto; padding: 5px 14px; border-radius: 6px;
+  background: var(--primary); color: #fff; font-size: 12px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* ========== Copilot 折叠态 ========== */
+.copilot-collapsed-bar {
+  display: none; flex-direction: column; align-items: center;
+  padding: 16px 0; cursor: pointer; height: 100%;
+  background: var(--gradient-card);
+}
+.copilot.collapsed .copilot-collapsed-bar { display: flex; }
+.copilot-collapsed-bar .copilot-icon { margin-bottom: 12px; }
+.copilot-collapsed-text {
+  writing-mode: vertical-rl; text-orientation: mixed;
+  font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+/* ========== Copilot 折叠后竖向触发条文字 ========== */
+.copilot-collapsed-bar {
+  background: var(--gradient-card);
+  border-left: 1px solid var(--border);
+}
+
+/* ========== @ 引用弹窗（兼容 mention-modal 与蓝本的 mention-popup） ========== */
+.mention-popup {
+  display: none;
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 560px; max-height: 480px;
+  background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg);
+  z-index: 100; overflow: hidden; flex-direction: column;
+}
+.mention-popup.active { display: flex; }
+.mention-modal {
+  display: none;
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 560px; max-height: 480px;
+  background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg);
+  z-index: 100; overflow: hidden;
+  flex-direction: column;
+}
+.mention-modal.active { display: flex; }
+.mention-mask {
+  display: none;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99;
+}
+.mention-mask.active { display: block; }
+.mention-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.mention-search {
+  flex: 1; background: var(--bg-page); border-radius: 6px;
+  padding: 6px 10px; display: flex; align-items: center; gap: 6px;
+}
+.mention-search input { flex: 1; background: transparent; font-size: 13px; }
+.mention-tabs {
+  display: flex; padding: 0 16px; border-bottom: 1px solid var(--border-light);
+  gap: 16px;
+}
+.mention-tab {
+  padding: 10px 0; font-size: 13px; color: var(--text-3); cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.mention-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.mention-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+.mention-item {
+  padding: 8px 16px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: background 0.15s;
+}
+.mention-item:hover { background: var(--bg-page); }
+.mention-item-info { flex: 1; min-width: 0; }
+.mention-item-name { font-size: 13px; font-weight: 500; color: var(--text-1); }
+.mention-item-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }

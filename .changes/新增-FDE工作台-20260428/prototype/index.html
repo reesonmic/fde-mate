@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>FDE工作台 - 高保真原型</title>
+<style>
+/* ========== CSS Variables 主题 ========== */
+:root {
+  --primary: #1677FF;
+  --primary-dark: #0050B3;
+  --primary-light: #69B1FF;
+  --primary-bg: #E6F4FF;
+  --bg-page: #F5F7FA;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F0F5FF;
+  --text-1: #1F2937;
+  --text-2: #4B5563;
+  --text-3: #6B7280;
+  --text-4: #9CA3AF;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --success: #52C41A;
+  --warning: #FAAD14;
+  --danger: #FF4D4F;
+  --info: #1677FF;
+  --radius-card: 8px;
+  --radius-btn: 6px;
+  --radius-sm: 4px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+  --header-h: 60px;
+  --nav-w: 220px;
+  --copilot-w: 400px;
+  --copilot-collapsed-w: 56px;
+  --gradient-primary: linear-gradient(135deg, #1677FF 0%, #0050B3 100%);
+  --gradient-card: linear-gradient(135deg, #E6F4FF 0%, #F0F5FF 100%);
+
+  /* 图标系统 */
+  --icon-stroke: 1.5;
+  --icon-color-default: #6B7280;
+  --icon-color-active: #1677FF;
+  --icon-color-success: #52C41A;
+  --icon-color-warning: #FAAD14;
+  --icon-color-danger: #FF4D4F;
+
+  /* 助手徽章渐变（3 助手差异化点缀色） */
+  --badge-task: linear-gradient(135deg, #1677FF 0%, #0050B3 100%);
+  --badge-project: linear-gradient(135deg, #722ED1 0%, #531DAB 100%);
+  --badge-coach: linear-gradient(135deg, #13C2C2 0%, #08979C 100%);
+  --badge-files: linear-gradient(135deg, #FA8C16 0%, #D46B08 100%);
+
+  /* 文件类型色 */
+  --file-color-pdf: #FF4D4F;
+  --file-color-doc: #1677FF;
+  --file-color-xls: #52C41A;
+  --file-color-ppt: #FA8C16;
+  --file-color-img: #722ED1;
+  --file-color-folder: #FAAD14;
+}
+
+/* ========== 图标系统 ========== */
+.ico {
+  width: 16px; height: 16px;
+  stroke: currentColor; fill: none;
+  stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+  flex-shrink: 0; vertical-align: -3px;
+  display: inline-block;
+}
+.ico-sm { width: 14px; height: 14px; }
+.ico-lg { width: 20px; height: 20px; }
+.ico-xl { width: 24px; height: 24px; }
+.ico-primary { color: var(--primary); }
+.ico-muted { color: var(--text-3); }
+.ico-success { color: var(--success); }
+.ico-warning { color: var(--warning); }
+.ico-danger { color: var(--danger); }
+
+/* 助手徽章 */
+.assistant-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  font-size: 14px; font-weight: 700; color: #fff;
+  letter-spacing: -0.5px; flex-shrink: 0;
+  font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  box-shadow: 0 2px 6px rgba(22,119,255,0.18);
+  background: var(--gradient-primary);
+}
+.assistant-badge.task    { background: var(--badge-task);    box-shadow: 0 2px 6px rgba(22,119,255,0.22); }
+.assistant-badge.project { background: var(--badge-project); box-shadow: 0 2px 6px rgba(114,46,209,0.22); }
+.assistant-badge.coach   { background: var(--badge-coach);   box-shadow: 0 2px 6px rgba(19,194,194,0.22); }
+.assistant-badge.files   { background: var(--badge-files);   box-shadow: 0 2px 6px rgba(250,140,22,0.22); }
+.assistant-badge.sm { width: 24px; height: 24px; font-size: 11px; border-radius: 6px; }
+.assistant-badge.lg { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
+
+/* 状态 dot */
+.status-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  flex-shrink: 0;
+}
+.status-dot.danger  { background: var(--danger);  box-shadow: 0 0 0 3px rgba(255,77,79,0.12); }
+.status-dot.warning { background: var(--warning); box-shadow: 0 0 0 3px rgba(250,173,20,0.12); }
+.status-dot.success { background: var(--success); }
+.status-dot.info    { background: var(--primary); }
+
+/* 图标 + 文案组合 */
+.title-with-icon, .meta-with-icon {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.meta-with-icon { gap: 4px; }
+.meta-with-icon .ico { color: var(--text-3); }
+
+/* Copilot AI 消息内嵌头像（小徽章） */
+.copilot-msg-avatar-wrap {
+  flex-shrink: 0; display: inline-flex; align-items: flex-start; padding-top: 2px;
+}
+.copilot-msg-ai { display: flex; gap: 8px; align-items: flex-start; }
+.copilot-msg-ai .copilot-bubble { flex: 1; min-width: 0; }
+
+/* 操作卡 / 报告卡标题图标对齐 */
+.action-card-title {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 600; color: var(--text-1);
+}
+.action-card-header .action-status {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.report-card-title {
+  display: flex; align-items: center; gap: 6px;
+}
+/* 按钮内的小图标 */
+.btn .ico { vertical-align: -2px; }
+.action-card-footer .btn .ico { width: 12px; height: 12px; }
+.copilot-input-tools .ico, .ai-input-tools .ico { vertical-align: -2px; }
+
+/* NEW 角标 */
+.badge-new {
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 10px; font-weight: 600; color: #fff;
+  background: var(--gradient-primary); margin-left: 6px;
+  vertical-align: 2px; letter-spacing: 0.3px;
+}
+
+/* ========== Reset ========== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  color: var(--text-1);
+  background: var(--bg-page);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea { font-family: inherit; outline: none; border: none; }
+ul, li { list-style: none; }
+a { color: inherit; text-decoration: none; }
+
+/* ========== 通用组件样式 ========== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 16px; border-radius: var(--radius-btn);
+  font-size: 13px; font-weight: 500; transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-default { background: #fff; color: var(--text-1); border-color: var(--border); }
+.btn-default:hover { color: var(--primary); border-color: var(--primary); }
+.btn-text { color: var(--text-3); padding: 0 8px; }
+.btn-text:hover { color: var(--primary); background: var(--bg-hover); }
+.btn-sm { height: 26px; padding: 0 10px; font-size: 12px; }
+.btn-danger { background: #fff; color: var(--danger); border-color: #FFCCC7; }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+
+.tag {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 8px;
+  border-radius: var(--radius-sm); font-size: 12px; font-weight: 500;
+}
+.tag-blue { background: var(--primary-bg); color: var(--primary); }
+.tag-green { background: #F6FFED; color: var(--success); }
+.tag-yellow { background: #FFFBE6; color: var(--warning); }
+.tag-red { background: #FFF1F0; color: var(--danger); }
+.tag-gray { background: #F5F5F5; color: var(--text-3); }
+
+.card {
+  background: var(--bg-card); border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md); padding: 20px;
+}
+.card-title {
+  font-size: 15px; font-weight: 600; color: var(--text-1); margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* 头像 */
+.avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--gradient-primary); color: #fff; font-size: 13px; font-weight: 600;
+  flex-shrink: 0;
+}
+.avatar-sm { width: 24px; height: 24px; font-size: 11px; }
+.avatar-lg { width: 48px; height: 48px; font-size: 18px; }
+
+/* 进度条 */
+.progress { width: 100%; height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--gradient-primary); border-radius: 3px; transition: width 0.3s; }
+.progress-bar.warning { background: linear-gradient(135deg, #FAAD14, #FA8C16); }
+.progress-bar.danger { background: linear-gradient(135deg, #FF7875, #FF4D4F); }
+
+/* ========== 整体布局 ========== */
+.app {
+  display: flex; flex-direction: column; height: 100vh;
+}
+
+/* Header */
+.header {
+  height: var(--header-h); background: #fff; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px;
+  z-index: 100;
+}
+.header-logo {
+  display: flex; align-items: center; gap: 10px;
+  width: calc(var(--nav-w) - 24px); font-size: 18px; font-weight: 700;
+  background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.header-logo-icon {
+  width: 32px; height: 32px; background: var(--gradient-primary);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 18px;
+  -webkit-text-fill-color: #fff;
+}
+.header-search {
+  flex: 1; max-width: 480px; margin: 0 32px;
+  display: flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 14px; border-radius: 18px; background: var(--bg-page);
+  color: var(--text-3);
+}
+.header-search input { flex: 1; background: transparent; font-size: 13px; color: var(--text-1); }
+.header-search input::placeholder { color: var(--text-4); }
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.header-icon-btn {
+  width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  position: relative; color: var(--text-2); font-size: 18px; transition: all 0.2s;
+}
+.header-icon-btn:hover { background: var(--bg-hover); color: var(--primary); }
+.header-icon-btn .badge {
+  position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px;
+  background: var(--danger); color: #fff; border-radius: 8px;
+  font-size: 10px; line-height: 16px; padding: 0 4px; font-weight: 600;
+}
+.header-user {
+  display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px;
+  border-radius: 20px; transition: background 0.2s;
+}
+.header-user:hover { background: var(--bg-hover); }
+.header-user-name { font-size: 13px; font-weight: 500; }
+
+/* Body 容器 */
+.body {
+  flex: 1; display: flex; overflow: hidden;
+}
+
+/* Nav 侧边导航 */
+.nav {
+  width: var(--nav-w); background: #fff; border-right: 1px solid var(--border);
+  padding: 16px 12px; flex-shrink: 0; overflow-y: auto;
+}
+.nav-group-title {
+  font-size: 11px; font-weight: 600; color: var(--text-4);
+  padding: 12px 12px 8px; letter-spacing: 1px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: var(--radius-btn); color: var(--text-2); font-size: 14px;
+  cursor: pointer; transition: all 0.15s; margin-bottom: 2px; user-select: none;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--primary); }
+.nav-item.active {
+  background: var(--gradient-card); color: var(--primary); font-weight: 600;
+  position: relative;
+}
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  background: var(--primary); border-radius: 0 2px 2px 0;
+}
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px;
+  background: var(--danger); color: #fff; border-radius: 9px;
+  font-size: 10px; line-height: 18px; font-weight: 600;
+}
+
+/* Main 主内容区 */
+.main {
+  flex: 1; overflow: auto; min-width: 720px;
+  display: flex; flex-direction: column;
+}
+.page { display: none; padding: 24px; flex: 1; }
+.page.active { display: block; }
+
+/* 页面标题区 */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+}
+.page-title { font-size: 22px; font-weight: 700; color: var(--text-1); }
+.page-breadcrumb { color: var(--text-3); font-size: 13px; margin-bottom: 8px; }
+.page-breadcrumb a { color: var(--primary); }
+
+/* ========== 页面 1: Dashboard ========== */
+.welcome-banner {
+  background: var(--gradient-primary); color: #fff; padding: 24px 28px;
+  border-radius: var(--radius-card); margin-bottom: 20px; position: relative; overflow: hidden;
+}
+.welcome-banner::after {
+  content: ''; position: absolute; right: -40px; top: -40px; width: 220px; height: 220px;
+  border-radius: 50%; background: rgba(255,255,255,0.08);
+  box-shadow: -60px 60px 0 -30px rgba(255,255,255,0.06);
+}
+.welcome-greeting { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.welcome-tip { opacity: 0.85; font-size: 13px; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg-card); padding: 20px; border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 16px;
+  position: relative; overflow: hidden;
+}
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  background: var(--gradient-card); color: var(--primary);
+}
+.stat-info { flex: 1; }
+.stat-label { font-size: 12px; color: var(--text-3); margin-bottom: 4px; }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--text-1); }
+.stat-trend { font-size: 11px; color: var(--success); margin-left: 4px; }
+.stat-trend.down { color: var(--danger); }
+
+.dashboard-grid {
+  display: grid; grid-template-columns: 2fr 1fr; gap: 16px;
+}
+.kanban {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.kanban-col {
+  background: var(--bg-page); border-radius: var(--radius-card); padding: 12px;
+}
+.kanban-col-title {
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  padding: 4px 8px 12px; display: flex; align-items: center; justify-content: space-between;
+}
+.kanban-col-count {
+  background: #fff; padding: 0 8px; border-radius: 10px; font-size: 11px; color: var(--text-3);
+}
+.kanban-card {
+  background: #fff; padding: 12px; border-radius: var(--radius-btn);
+  margin-bottom: 8px; box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.2s;
+}
+.kanban-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kanban-card-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; line-height: 1.4; }
+.kanban-card-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-3); }
+.kanban-card-meta .tag { font-size: 11px; padding: 0 6px; height: 18px; }
+
+.project-list-item {
+  padding: 12px 0; border-bottom: 1px solid var(--border-light);
+}
+.project-list-item:last-child { border-bottom: none; }
+.project-list-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.project-list-name { font-size: 13px; font-weight: 500; }
+.project-list-percent { font-size: 12px; color: var(--text-3); }
+
+.calendar-week {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 16px;
+}
+.calendar-day {
+  text-align: center; padding: 8px 4px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.2s;
+}
+.calendar-day-name { font-size: 11px; color: var(--text-3); margin-bottom: 2px; }
+.calendar-day-num { font-size: 14px; font-weight: 500; }
+.calendar-day:hover { background: var(--bg-hover); }
+.calendar-day.today { background: var(--primary); color: #fff; }
+.calendar-day.today .calendar-day-name { color: rgba(255,255,255,0.8); }
+.calendar-day.has-event { position: relative; }
+.calendar-day.has-event::after {
+  content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; background: var(--warning); border-radius: 50%;
+}
+.calendar-day.today.has-event::after { background: #fff; }
+
+.todo-item {
+  display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light);
+}
+.todo-item:last-child { border-bottom: none; }
+.todo-priority {
+  width: 4px; border-radius: 2px; flex-shrink: 0;
+}
+.todo-priority.p0 { background: var(--danger); }
+.todo-priority.p1 { background: var(--warning); }
+.todo-priority.p2 { background: var(--primary); }
+.todo-content { flex: 1; }
+.todo-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.todo-meta { font-size: 11px; color: var(--text-3); }
+
+/* ========== 页面 2: Tasks ========== */
+.tasks-toolbar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  background: #fff; padding: 12px 16px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm);
+}
+.view-toggle { display: flex; background: var(--bg-page); border-radius: var(--radius-btn); padding: 2px; }
+.view-toggle-btn {
+  padding: 6px 12px; border-radius: 4px; font-size: 12px; color: var(--text-3);
+}
+.view-toggle-btn.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: var(--shadow-sm); }
+.tasks-filters { display: flex; gap: 8px; flex: 1; }
+.filter-pill {
+  padding: 4px 12px; border-radius: 12px; background: var(--bg-page);
+  font-size: 12px; color: var(--text-2);
+}
+.filter-pill.active { background: var(--primary-bg); color: var(--primary); font-weight: 500; }
+
+.tasks-kanban {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.tasks-kanban .kanban-col { min-height: 500px; }
+
+/* ========== 页面 3: Project Detail ========== */
+.project-overview {
+  background: #fff; padding: 24px; border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md); margin-bottom: 20px;
+  display: grid; grid-template-columns: 1fr auto; gap: 20px;
+}
+.project-info-row {
+  display: flex; gap: 32px; flex-wrap: wrap;
+}
+.project-info-item { min-width: 120px; }
+.project-info-label { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+.project-info-value { font-size: 14px; font-weight: 500; }
+.project-name-line {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.project-name-text { font-size: 20px; font-weight: 700; }
+
+.health-ring {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: conic-gradient(var(--success) 0% 78%, var(--border-light) 78% 100%);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.health-ring::before {
+  content: ''; position: absolute; inset: 8px; background: #fff; border-radius: 50%;
+}
+.health-ring-text {
+  position: relative; text-align: center;
+}
+.health-ring-num { font-size: 22px; font-weight: 700; color: var(--success); }
+.health-ring-label { font-size: 10px; color: var(--text-3); }
+
+.tabs {
+  display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+  background: #fff; padding: 0 16px; border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+.tab {
+  padding: 14px 16px; font-size: 14px; color: var(--text-3); cursor: pointer;
+  position: relative; transition: color 0.2s;
+}
+.tab:hover { color: var(--primary); }
+.tab.active { color: var(--primary); font-weight: 600; }
+.tab.active::after {
+  content: ''; position: absolute; bottom: -1px; left: 16px; right: 16px;
+  height: 2px; background: var(--primary); border-radius: 1px;
+}
+
+.timeline {
+  position: relative; padding-left: 24px;
+}
+.timeline::before {
+  content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px;
+  width: 2px; background: var(--border);
+}
+.timeline-item { position: relative; padding-bottom: 20px; }
+.timeline-dot {
+  position: absolute; left: -20px; top: 4px; width: 12px; height: 12px;
+  border-radius: 50%; background: #fff; border: 2px solid var(--primary);
+}
+.timeline-item.done .timeline-dot { background: var(--success); border-color: var(--success); }
+.timeline-item.current .timeline-dot {
+  background: var(--primary); border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-bg);
+}
+.timeline-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.timeline-desc { font-size: 12px; color: var(--text-3); }
+
+/* ========== 页面 4: Coach ========== */
+.coach-entries {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;
+}
+.coach-entry-card {
+  background: #fff; padding: 20px; border-radius: var(--radius-card); box-shadow: var(--shadow-md);
+  cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
+}
+.coach-entry-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.coach-entry-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--gradient-primary);
+}
+.coach-entry-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: var(--gradient-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+  margin-bottom: 12px;
+}
+.coach-entry-card:nth-child(2) .coach-entry-icon { background: linear-gradient(135deg, #36CFC9, #13C2C2); }
+.coach-entry-card:nth-child(3) .coach-entry-icon { background: linear-gradient(135deg, #FF85C0, #EB2F96); }
+.coach-entry-card:nth-child(4) .coach-entry-icon { background: linear-gradient(135deg, #FFA940, #FA8C16); }
+.coach-entry-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.coach-entry-desc { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+
+.case-card {
+  background: #fff; padding: 16px; border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm); margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.case-card:hover { box-shadow: var(--shadow-md); }
+.case-match {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--gradient-card); color: var(--primary); font-weight: 700;
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+  flex-shrink: 0;
+}
+.case-info { flex: 1; }
+.case-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.case-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.case-meta { font-size: 11px; color: var(--text-3); }
+
+.practice-list { display: flex; flex-direction: column; gap: 8px; }
+.practice-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px;
+  background: var(--bg-page); border-radius: var(--radius-btn); cursor: pointer;
+  transition: all 0.2s;
+}
+.practice-item:hover { background: var(--bg-hover); }
+.practice-icon { font-size: 22px; }
+.practice-name { flex: 1; font-size: 13px; font-weight: 500; }
+.practice-arrow { color: var(--text-4); }
+
+/* ========== 页面 5: Files ========== */
+.files-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; }
+.files-sidebar {
+  background: #fff; padding: 16px 12px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm);
+  height: fit-content;
+}
+.files-tree-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-radius: var(--radius-btn); font-size: 13px; cursor: pointer; transition: all 0.15s;
+  color: var(--text-2);
+}
+.files-tree-item:hover { background: var(--bg-hover); color: var(--primary); }
+.files-tree-item.active { background: var(--gradient-card); color: var(--primary); font-weight: 600; }
+.files-tree-children { padding-left: 24px; }
+
+.files-main {
+  background: #fff; border-radius: var(--radius-card); box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+}
+.files-toolbar {
+  padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 12px;
+}
+.files-grid {
+  padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px;
+  flex: 1; overflow: auto;
+}
+.file-card {
+  border: 1px solid var(--border-light); border-radius: var(--radius-card);
+  padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.2s;
+  position: relative;
+}
+.file-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+.file-thumb {
+  width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 32px;
+  background: var(--bg-page);
+}
+.file-thumb.pdf { background: #FFF1F0; color: #FF4D4F; }
+.file-thumb.doc { background: #E6F4FF; color: #1677FF; }
+.file-thumb.xlsx { background: #F6FFED; color: #52C41A; }
+.file-thumb.ppt { background: #FFF7E6; color: #FA8C16; }
+.file-thumb.img { background: #F9F0FF; color: #722ED1; }
+.file-thumb.folder { background: var(--gradient-card); color: var(--primary); }
+.file-name { font-size: 12px; font-weight: 500; word-break: break-all; line-height: 1.4; margin-bottom: 4px; }
+.file-meta { font-size: 11px; color: var(--text-3); }
+
+.files-footer {
+  padding: 12px 20px; border-top: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-3);
+}
+.files-footer .progress { width: 200px; }
+
+/* ========== 页面 6: AI Chat (Global) ========== */
+.ai-chat-layout {
+  display: grid; grid-template-columns: 280px 1fr 280px; gap: 0; height: calc(100vh - var(--header-h) - 48px);
+  background: #fff; border-radius: var(--radius-card); box-shadow: var(--shadow-md); overflow: hidden;
+}
+.ai-history {
+  border-right: 1px solid var(--border-light); display: flex; flex-direction: column;
+}
+.ai-history-header {
+  padding: 16px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 8px;
+}
+.ai-history-search {
+  flex: 1; padding: 6px 10px; border-radius: var(--radius-btn); background: var(--bg-page);
+  font-size: 12px; color: var(--text-3);
+}
+.ai-history-list { flex: 1; overflow: auto; padding: 8px; }
+.ai-history-group-title {
+  font-size: 11px; color: var(--text-4); padding: 8px 8px 4px; font-weight: 600;
+}
+.ai-history-item {
+  padding: 10px 12px; border-radius: var(--radius-btn); cursor: pointer;
+  font-size: 13px; color: var(--text-2); margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ai-history-item:hover { background: var(--bg-hover); }
+.ai-history-item.active { background: var(--gradient-card); color: var(--primary); font-weight: 500; }
+
+.ai-chat-main { display: flex; flex-direction: column; }
+.ai-chat-mode-bar {
+  padding: 14px 20px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 8px;
+}
+.ai-mode-btn {
+  padding: 6px 14px; border-radius: 16px; background: var(--bg-page);
+  font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 4px;
+}
+.ai-mode-btn.active { background: var(--primary); color: #fff; font-weight: 500; }
+
+.ai-messages { flex: 1; overflow: auto; padding: 20px 32px; }
+.msg { margin-bottom: 20px; display: flex; gap: 12px; }
+.msg-avatar {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.msg-user .msg-avatar { background: var(--gradient-primary); color: #fff; }
+.msg-ai .msg-avatar { background: var(--gradient-card); color: var(--primary); }
+.msg-content { flex: 1; max-width: calc(100% - 44px); }
+.msg-bubble {
+  padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.7;
+  display: inline-block; max-width: 100%;
+}
+.msg-user { flex-direction: row-reverse; }
+.msg-user .msg-content { display: flex; flex-direction: column; align-items: flex-end; }
+.msg-user .msg-bubble { background: var(--primary); color: #fff; border-radius: 12px 4px 12px 12px; }
+.msg-ai .msg-bubble { background: var(--bg-page); border-radius: 4px 12px 12px 12px; }
+.msg-time { font-size: 11px; color: var(--text-4); margin-top: 4px; }
+
+.ai-source {
+  margin-top: 8px; padding: 8px 10px; background: #fff; border: 1px dashed var(--border);
+  border-radius: var(--radius-sm); font-size: 11px; color: var(--text-3);
+}
+.ai-source-title { font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+
+.ai-input-area {
+  border-top: 1px solid var(--border-light); padding: 16px 20px;
+}
+.ai-input-box {
+  background: var(--bg-page); border-radius: 12px; padding: 12px 14px;
+  border: 1px solid transparent; transition: border-color 0.2s;
+}
+.ai-input-box:focus-within { border-color: var(--primary); background: #fff; }
+.ai-input { width: 100%; min-height: 40px; max-height: 120px; resize: none; background: transparent; font-size: 13px; line-height: 1.6; }
+.ai-input-tools { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.ai-input-tools .ai-tool { padding: 4px 8px; border-radius: var(--radius-sm); font-size: 12px; color: var(--text-3); }
+.ai-input-tools .ai-tool:hover { background: #fff; color: var(--primary); }
+.ai-send-btn {
+  margin-left: auto; padding: 6px 16px; background: var(--primary); color: #fff;
+  border-radius: var(--radius-btn); font-size: 12px; font-weight: 500;
+}
+
+.ai-context-panel { border-left: 1px solid var(--border-light); padding: 16px; }
+.ai-context-panel h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-2); }
+.ai-context-tag {
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+  background: var(--bg-page); border-radius: var(--radius-btn); margin-bottom: 6px; font-size: 12px;
+}
+
+/* ========== AI Copilot 侧边栏（嵌入式） ========== */
+.copilot {
+  width: var(--copilot-w); background: #fff; border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0;
+  transition: width 0.3s ease;
+}
+.copilot.collapsed { width: var(--copilot-collapsed-w); }
+.copilot.collapsed .copilot-body,
+.copilot.collapsed .copilot-context,
+.copilot.collapsed .copilot-input-area { display: none; }
+.copilot.collapsed .copilot-header { padding: 12px 8px; flex-direction: column; gap: 8px; }
+.copilot.collapsed .copilot-header-title { writing-mode: vertical-rl; text-orientation: mixed; font-size: 12px; }
+.copilot.collapsed .copilot-header-actions .btn-text { display: none; }
+
+.copilot-header {
+  padding: 14px 16px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 8px;
+  background: var(--gradient-card);
+}
+.copilot-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--gradient-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  flex-shrink: 0;
+}
+.copilot-header-title { flex: 1; font-size: 14px; font-weight: 600; color: var(--text-1); }
+.copilot-header-actions { display: flex; gap: 4px; }
+
+.copilot-context {
+  padding: 10px 16px; border-bottom: 1px solid var(--border-light);
+  background: #FAFBFC;
+}
+.copilot-context-label { font-size: 11px; color: var(--text-3); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+.copilot-context-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.copilot-context-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; background: var(--primary-bg); color: var(--primary);
+  border-radius: 12px; font-size: 11px; font-weight: 500;
+}
+.copilot-context-tag .close { cursor: pointer; opacity: 0.6; }
+.copilot-context-tag .close:hover { opacity: 1; }
+.copilot-context-add {
+  display: inline-flex; align-items: center; padding: 3px 8px;
+  border: 1px dashed var(--border); border-radius: 12px;
+  font-size: 11px; color: var(--text-3); cursor: pointer;
+}
+.copilot-context-add:hover { border-color: var(--primary); color: var(--primary); }
+
+.copilot-body {
+  flex: 1; overflow-y: auto; padding: 16px;
+}
+.copilot-msg { margin-bottom: 16px; }
+.copilot-msg-user { display: flex; justify-content: flex-end; }
+.copilot-msg-user .copilot-bubble {
+  background: var(--primary); color: #fff;
+  padding: 10px 14px; border-radius: 12px 4px 12px 12px;
+  font-size: 13px; line-height: 1.6; max-width: 85%;
+}
+.copilot-msg-ai .copilot-bubble {
+  background: var(--bg-page); padding: 12px 14px;
+  border-radius: 4px 12px 12px 12px; font-size: 13px; line-height: 1.7;
+}
+.copilot-msg-meta { font-size: 11px; color: var(--text-4); margin-top: 4px; padding: 0 4px; }
+.copilot-msg-user .copilot-msg-meta { text-align: right; }
+
+/* 操作预览卡片 */
+.action-card {
+  margin-top: 10px; border: 1px solid var(--border); border-radius: var(--radius-card);
+  overflow: hidden; background: #fff;
+}
+.action-card-header {
+  padding: 10px 12px; background: var(--gradient-card);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600;
+  border-bottom: 1px solid var(--border-light);
+}
+.action-card-header .action-status {
+  margin-left: auto; padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; font-weight: 500;
+}
+.action-status.pending { background: #FFF7E6; color: var(--warning); }
+.action-status.running { background: var(--primary-bg); color: var(--primary); }
+.action-status.done { background: #F6FFED; color: var(--success); }
+.action-card-body {
+  padding: 12px; font-size: 12px;
+}
+.action-row {
+  display: flex; padding: 4px 0; gap: 8px;
+}
+.action-row-label { color: var(--text-3); min-width: 64px; }
+.action-row-value { color: var(--text-1); font-weight: 500; flex: 1; }
+.action-row-value.del { text-decoration: line-through; color: var(--text-4); }
+.action-row-value.add { color: var(--primary); }
+.action-impact {
+  margin-top: 8px; padding: 8px; background: #FFF7E6;
+  border-radius: var(--radius-sm); font-size: 11px; color: var(--warning);
+  display: flex; align-items: center; gap: 4px;
+}
+.action-impact-list {
+  margin-top: 6px; padding: 6px 0 0; max-height: 100px; overflow: auto;
+  border-top: 1px dashed #FFE7BA;
+}
+.action-impact-list-item { padding: 2px 0; color: var(--text-2); }
+.action-card-footer {
+  padding: 10px 12px; border-top: 1px solid var(--border-light);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+
+/* 搜索结果卡片（文件助手） */
+.search-results-card {
+  margin-top: 10px; border: 1px solid var(--border); border-radius: var(--radius-card);
+  background: #fff; overflow: hidden;
+}
+.search-result-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.15s;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--bg-page); }
+.search-result-info { flex: 1; min-width: 0; }
+.search-result-name {
+  font-size: 12px; font-weight: 500; color: var(--text-1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.search-result-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* Files 文件卡片选中态（与文件助手上下文呼应） */
+.file-card.selected {
+  border-color: var(--badge-coach); /* 临时占位，实际下方覆盖 */
+}
+.file-card.selected {
+  border: 2px solid #FA8C16;
+  box-shadow: 0 0 0 3px rgba(250,140,22,0.12);
+  position: relative;
+}
+.file-card.selected::after {
+  content: '已选'; position: absolute; top: 6px; right: 6px;
+  background: var(--badge-files); color: #fff;
+  padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* 报告卡片 */
+.report-card {
+  margin-top: 8px; padding: 12px; background: #fff;
+  border: 1px solid var(--border-light); border-radius: var(--radius-btn);
+}
+.report-card-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.report-risk-row {
+  display: flex; align-items: flex-start; gap: 8px; padding: 6px 0;
+  font-size: 12px;
+}
+.risk-level {
+  padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;
+  flex-shrink: 0; margin-top: 2px;
+}
+.risk-level.high { background: #FFF1F0; color: var(--danger); }
+.risk-level.mid { background: #FFF7E6; color: var(--warning); }
+.risk-level.low { background: #F6FFED; color: var(--success); }
+
+/* 推荐 NextStep 卡片 */
+.next-step-list { margin-top: 8px; }
+.next-step-item {
+  display: flex; gap: 8px; padding: 8px; background: #fff;
+  border: 1px solid var(--border-light); border-radius: var(--radius-btn);
+  margin-bottom: 6px; font-size: 12px;
+}
+.next-step-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--gradient-primary);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; flex-shrink: 0; font-size: 11px;
+}
+
+.copilot-input-area {
+  border-top: 1px solid var(--border-light); padding: 12px 14px;
+}
+.copilot-input-box {
+  background: var(--bg-page); border-radius: 10px; padding: 10px 12px;
+  border: 1px solid transparent; transition: all 0.2s;
+}
+.copilot-input-box:focus-within { border-color: var(--primary); background: #fff; }
+.copilot-input { width: 100%; background: transparent; font-size: 13px; line-height: 1.5; min-height: 36px; max-height: 100px; resize: none; }
+.copilot-input-tools { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+.copilot-tool-btn {
+  padding: 3px 8px; border-radius: 4px; font-size: 11px; color: var(--text-3);
+}
+.copilot-tool-btn:hover { background: #fff; color: var(--primary); }
+.copilot-send-btn {
+  margin-left: auto; padding: 4px 12px; background: var(--primary);
+  color: #fff; border-radius: var(--radius-btn); font-size: 12px; font-weight: 500;
+}
+.copilot-suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px;
+}
+.copilot-suggestion-chip {
+  padding: 4px 10px; background: var(--bg-page); border-radius: 12px;
+  font-size: 11px; color: var(--text-2); cursor: pointer; transition: all 0.2s;
+}
+.copilot-suggestion-chip:hover { background: var(--primary-bg); color: var(--primary); }
+
+/* @ 引用上下文选择弹窗 */
+.mention-popup {
+  position: absolute; bottom: calc(100% + 6px); left: 12px; right: 12px;
+  max-height: 320px; background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-lg);
+  z-index: 50; display: none; flex-direction: column; overflow: hidden;
+}
+.mention-popup.show { display: flex; }
+.mention-popup-search {
+  padding: 10px 12px; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 6px;
+}
+.mention-popup-search input {
+  flex: 1; font-size: 12px; color: var(--text-1); padding: 4px 0;
+}
+.mention-popup-tabs {
+  display: flex; padding: 6px 8px 0; gap: 4px;
+  border-bottom: 1px solid var(--border-light);
+}
+.mention-popup-tab {
+  padding: 6px 10px; font-size: 11px; color: var(--text-3);
+  border-radius: 4px 4px 0 0; cursor: pointer; border-bottom: 2px solid transparent;
+}
+.mention-popup-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.mention-popup-list { flex: 1; overflow-y: auto; padding: 4px; }
+.mention-popup-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-radius: var(--radius-sm); cursor: pointer; font-size: 12px;
+}
+.mention-popup-item:hover, .mention-popup-item.highlight { background: var(--bg-hover); }
+.mention-popup-item-icon {
+  width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+  background: var(--gradient-card); color: var(--primary);
+}
+.mention-popup-item-info { flex: 1; min-width: 0; }
+.mention-popup-item-name {
+  font-size: 12px; font-weight: 500; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mention-popup-item-meta { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+.mention-popup-empty {
+  padding: 24px 12px; text-align: center; color: var(--text-4); font-size: 12px;
+}
+.copilot-input-box { position: relative; }
+
+/* 折叠后的竖向触发条 */
+.copilot-collapsed-bar {
+  display: none; flex-direction: column; align-items: center; padding: 16px 0;
+  cursor: pointer; height: 100%;
+  background: var(--gradient-card);
+}
+.copilot.collapsed .copilot-collapsed-bar { display: flex; }
+.copilot.collapsed .copilot-header { display: none; }
+.copilot-collapsed-bar .copilot-icon { margin-bottom: 12px; }
+.copilot-collapsed-text {
+  writing-mode: vertical-rl; text-orientation: mixed; font-size: 12px;
+  color: var(--primary); font-weight: 600; margin-bottom: 12px;
+}
+
+/* ========== 滚动条美化 ========== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+<!-- ========== SVG 图标 Sprite（Lucide 风格 / 24x24 viewBox / 1.5px stroke） ========== -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;" aria-hidden="true">
+  <symbol id="i-dashboard" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></symbol>
+  <symbol id="i-task" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></symbol>
+  <symbol id="i-project" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="i-file-pdf" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="8" y="18" font-size="6" font-weight="700" fill="currentColor" stroke="none">PDF</text></symbol>
+  <symbol id="i-file-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="8" y="18" font-size="6" font-weight="700" fill="currentColor" stroke="none">DOC</text></symbol>
+  <symbol id="i-file-xls" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="8" y="18" font-size="6" font-weight="700" fill="currentColor" stroke="none">XLS</text></symbol>
+  <symbol id="i-file-ppt" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="8" y="18" font-size="6" font-weight="700" fill="currentColor" stroke="none">PPT</text></symbol>
+  <symbol id="i-file-img" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="1.5"/><polyline points="20 17 16 13 8 21"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 14l.95 2.55L22 17.5l-2.05.95L19 21l-.95-2.55L16 17.5l2.05-.95z"/><path d="M5 3l.95 2.55L8 6.5l-2.05.95L5 10l-.95-2.55L2 6.5l2.05-.95z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-chevron-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
+  <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.5c.5.4 1 1 1 1.5v2h6v-2c0-.5.5-1.1 1-1.5A7 7 0 0 0 12 2z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/><polyline points="12 7 12 12 16 14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></symbol>
+  <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-at-sign" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- ========== Header ========== -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="header-logo-icon">F</div>
+      <span>FDE 工作台</span>
+    </div>
+    <div class="header-search">
+      <svg class="ico ico-muted"><use href="#i-search"/></svg>
+      <input placeholder="全局搜索：项目、任务、客户、文件、知识..." />
+      <span style="font-size:11px;color:var(--text-4);background:#fff;padding:2px 6px;border-radius:3px;">⌘K</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-icon-btn" title="帮助"><svg class="ico"><use href="#i-help"/></svg></button>
+      <button class="header-icon-btn" title="消息">
+        <svg class="ico"><use href="#i-bell"/></svg>
+        <span class="badge">3</span>
+      </button>
+      <div class="header-user">
+        <div class="avatar">吾</div>
+        <span class="header-user-name">吾明</span>
+        <svg class="ico ico-sm ico-muted"><use href="#i-chevron-down"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== Body ========== -->
+  <div class="body">
+    <!-- Nav -->
+    <nav class="nav">
+      <div class="nav-group-title">工作</div>
+      <div class="nav-item active" data-page="dashboard">
+        <svg class="ico nav-icon"><use href="#i-dashboard"/></svg><span>工作台</span>
+      </div>
+      <div class="nav-item" data-page="tasks">
+        <svg class="ico nav-icon"><use href="#i-task"/></svg><span>任务管理</span>
+        <span class="nav-badge">5</span>
+      </div>
+      <div class="nav-item" data-page="project-detail">
+        <svg class="ico nav-icon"><use href="#i-project"/></svg><span>项目管理</span>
+      </div>
+
+      <div class="nav-group-title">能力</div>
+      <div class="nav-item" data-page="coach">
+        <svg class="ico nav-icon"><use href="#i-compass"/></svg><span>FDE</span>
+      </div>
+      <div class="nav-item" data-page="files">
+        <svg class="ico nav-icon"><use href="#i-folder"/></svg><span>文件中心</span>
+      </div>
+      <div class="nav-item" data-page="ai-chat">
+        <svg class="ico nav-icon"><use href="#i-sparkles"/></svg><span>AI 助手</span>
+      </div>
+
+      <div class="nav-group-title">客户</div>
+      <div class="nav-item">
+        <svg class="ico nav-icon"><use href="#i-users"/></svg><span>客户管理</span>
+      </div>
+      <div class="nav-item">
+        <svg class="ico nav-icon"><use href="#i-trending-up"/></svg><span>交付看板</span>
+      </div>
+
+      <div class="nav-group-title">其他</div>
+      <div class="nav-item">
+        <svg class="ico nav-icon"><use href="#i-settings"/></svg><span>设置</span>
+      </div>
+    </nav>
+
+    <!-- Main 内容区 -->
+    <main class="main">
+
+      <!-- ========== 页面 1: Dashboard ========== -->
+      <section class="page active" id="page-dashboard">
+        <div class="welcome-banner">
+          <div class="welcome-greeting">早上好，吾明</div>
+          <div class="welcome-tip">今日有 <b>5</b> 项待办、<b>2</b> 个项目里程碑临近，<b>1</b> 个高风险项目需要关注</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon"><svg class="ico ico-lg ico-primary"><use href="#i-project"/></svg></div><div class="stat-info"><div class="stat-label">进行中项目</div><div class="stat-value">8 <span class="stat-trend">+2</span></div></div></div>
+          <div class="stat-card"><div class="stat-icon"><svg class="ico ico-lg ico-primary"><use href="#i-task"/></svg></div><div class="stat-info"><div class="stat-label">今日待办</div><div class="stat-value">5 <span class="stat-trend down">-3</span></div></div></div>
+          <div class="stat-card"><div class="stat-icon"><svg class="ico ico-lg ico-primary"><use href="#i-rocket"/></svg></div><div class="stat-info"><div class="stat-label">本周交付</div><div class="stat-value">3 <span class="stat-trend">+1</span></div></div></div>
+          <div class="stat-card"><div class="stat-icon"><svg class="ico ico-lg ico-primary"><use href="#i-compass"/></svg></div><div class="stat-info"><div class="stat-label">AI 对练时长</div><div class="stat-value">2.5h</div></div></div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-title">任务看板 <a href="#" onclick="switchPage('tasks');return false;" style="font-size:12px;color:var(--primary);font-weight:400;display:inline-flex;align-items:center;gap:4px;">查看全部 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></a></div>
+            <div class="kanban">
+              <div class="kanban-col">
+                <div class="kanban-col-title"><span class="status-dot info"></span>待办 <span class="kanban-col-count">3</span></div>
+                <div class="kanban-card"><div class="kanban-card-title">完成阿里云A客户的 POC 方案</div><div class="kanban-card-meta"><span class="tag tag-red">P0</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>明天</span></div></div>
+                <div class="kanban-card"><div class="kanban-card-title">准备需求评审会议材料</div><div class="kanban-card-meta"><span class="tag tag-yellow">P1</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>后天</span></div></div>
+                <div class="kanban-card"><div class="kanban-card-title">客户验收文档归档</div><div class="kanban-card-meta"><span class="tag tag-blue">P2</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>本周五</span></div></div>
+              </div>
+              <div class="kanban-col">
+                <div class="kanban-col-title"><span class="status-dot warning"></span>进行中 <span class="kanban-col-count">2</span></div>
+                <div class="kanban-card"><div class="kanban-card-title">阿里云A数据中台数据接入开发</div><div class="kanban-card-meta"><span class="tag tag-red">P0</span><span>已 2 天</span></div></div>
+                <div class="kanban-card"><div class="kanban-card-title">编写本周项目周报</div><div class="kanban-card-meta"><span class="tag tag-yellow">P1</span><span>已 1 天</span></div></div>
+              </div>
+              <div class="kanban-col">
+                <div class="kanban-col-title"><span class="status-dot success"></span>已完成 <span class="kanban-col-count">5</span></div>
+                <div class="kanban-card"><div class="kanban-card-title">客户 B 项目启动会议</div><div class="kanban-card-meta"><span class="tag tag-green">已完成</span></div></div>
+                <div class="kanban-card"><div class="kanban-card-title">技术方案评审通过</div><div class="kanban-card-meta"><span class="tag tag-green">已完成</span></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-title"><span class="title-with-icon"><svg class="ico ico-primary"><use href="#i-calendar"/></svg>本周日历</span></div>
+              <div class="calendar-week">
+                <div class="calendar-day"><div class="calendar-day-name">一</div><div class="calendar-day-num">21</div></div>
+                <div class="calendar-day has-event"><div class="calendar-day-name">二</div><div class="calendar-day-num">22</div></div>
+                <div class="calendar-day"><div class="calendar-day-name">三</div><div class="calendar-day-num">23</div></div>
+                <div class="calendar-day today has-event"><div class="calendar-day-name">四</div><div class="calendar-day-num">24</div></div>
+                <div class="calendar-day has-event"><div class="calendar-day-name">五</div><div class="calendar-day-num">25</div></div>
+                <div class="calendar-day"><div class="calendar-day-name">六</div><div class="calendar-day-num">26</div></div>
+                <div class="calendar-day"><div class="calendar-day-name">日</div><div class="calendar-day-num">27</div></div>
+              </div>
+              <div class="card-title" style="font-size:13px;margin-top:8px;"><span class="title-with-icon"><svg class="ico ico-sm ico-primary"><use href="#i-zap"/></svg>今日重点</span></div>
+              <div class="todo-item"><div class="todo-priority p0"></div><div class="todo-content"><div class="todo-title">完成阿里云A客户 POC 方案</div><div class="todo-meta"><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-clock"/></svg>18:00 截止</span> · 阿里云A数据中台</div></div></div>
+              <div class="todo-item"><div class="todo-priority p1"></div><div class="todo-content"><div class="todo-title">客户 B 需求沟通会</div><div class="todo-meta"><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-clock"/></svg>14:00-15:30</span></div></div></div>
+              <div class="todo-item"><div class="todo-priority p2"></div><div class="todo-content"><div class="todo-title">提交本周日报</div><div class="todo-meta"><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-clock"/></svg>19:00 前</span></div></div></div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="title-with-icon"><span class="status-dot danger"></span>高风险项目</span></div>
+              <div class="project-list-item">
+                <div class="project-list-row"><span class="project-list-name">客户 C 智能客服项目</span><span class="tag tag-red">健康度低</span></div>
+                <div class="progress"><div class="progress-bar danger" style="width:35%;"></div></div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px;">3 个高风险点 · 进度落后 5 天</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title"><span class="title-with-icon"><svg class="ico ico-primary"><use href="#i-trending-up"/></svg>我的项目进度</span></div>
+          <div class="project-list-item">
+            <div class="project-list-row"><span class="project-list-name">阿里云A数据中台交付项目</span><span class="project-list-percent"><span class="tag tag-green">健康</span> 78%</span></div>
+            <div class="progress"><div class="progress-bar" style="width:78%;"></div></div>
+          </div>
+          <div class="project-list-item">
+            <div class="project-list-row"><span class="project-list-name">客户 B 营销数据平台</span><span class="project-list-percent"><span class="tag tag-yellow">关注</span> 52%</span></div>
+            <div class="progress"><div class="progress-bar warning" style="width:52%;"></div></div>
+          </div>
+          <div class="project-list-item">
+            <div class="project-list-row"><span class="project-list-name">客户 C 智能客服项目</span><span class="project-list-percent"><span class="tag tag-red">风险</span> 35%</span></div>
+            <div class="progress"><div class="progress-bar danger" style="width:35%;"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 页面 2: Tasks（含任务助手 Copilot） ========== -->
+      <section class="page" id="page-tasks">
+        <div class="page-header">
+          <div><div class="page-title">任务管理</div></div>
+          <div style="display:flex;gap:8px;"><button class="btn btn-default"><svg class="ico"><use href="#i-download"/></svg>导入</button><button class="btn btn-primary"><svg class="ico"><use href="#i-plus"/></svg>新建任务</button></div>
+        </div>
+
+        <div class="tasks-toolbar">
+          <div class="view-toggle"><div class="view-toggle-btn active">看板</div><div class="view-toggle-btn">列表</div><div class="view-toggle-btn">日历</div></div>
+          <div class="tasks-filters">
+            <div class="filter-pill active">全部 (12)</div>
+            <div class="filter-pill">我负责 (8)</div>
+            <div class="filter-pill">P0 (3)</div>
+            <div class="filter-pill">本周到期 (5)</div>
+            <div class="filter-pill">逾期 (2)</div>
+          </div>
+        </div>
+
+        <div class="tasks-kanban">
+          <div class="kanban-col">
+            <div class="kanban-col-title"><span class="status-dot info"></span>待办 <span class="kanban-col-count">5</span></div>
+            <div class="kanban-card"><div class="kanban-card-title">完成阿里云A客户的 POC 方案</div><div class="kanban-card-meta"><span class="tag tag-red">P0</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>明天</span><div class="avatar avatar-sm">吾</div></div></div>
+            <div class="kanban-card"><div class="kanban-card-title">需求评审会议材料准备</div><div class="kanban-card-meta"><span class="tag tag-yellow">P1</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>周五</span></div></div>
+            <div class="kanban-card"><div class="kanban-card-title">客户 B 沟通纪要整理</div><div class="kanban-card-meta"><span class="tag tag-blue">P2</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>下周一</span></div></div>
+            <div class="kanban-card"><div class="kanban-card-title">客户验收文档归档</div><div class="kanban-card-meta"><span class="tag tag-blue">P2</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>本周五</span></div></div>
+            <div class="kanban-card"><div class="kanban-card-title">交付方案评审反馈</div><div class="kanban-card-meta"><span class="tag tag-yellow">P1</span><span class="meta-with-icon"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>后天</span></div></div>
+          </div>
+          <div class="kanban-col">
+            <div class="kanban-col-title"><span class="status-dot warning"></span>进行中 <span class="kanban-col-count">3</span></div>
+            <div class="kanban-card"><div class="kanban-card-title">阿里云A数据接入开发</div><div class="kanban-card-meta"><span class="tag tag-red">P0</span><span>已 2 天</span></div></div>
+            <div class="kanban-card"><div class="kanban-card-title">本周项目周报编写</div><div class="kanban-card-meta"><span class="tag tag-yellow">P1</span></div></div>
+            <div class="kanban-card"><div class="kanban-card-title">客户 C 风险跟踪</div><div class="kanban-card-meta"><span class="tag tag-red">P0</span></div></div>
+          </div>
+          <div class="kanban-col">
+            <div class="kanban-col-title"><span class="status-dot info"></span>评审中 <span class="kanban-col-count">1</span></div>
+            <div class="kanban-card"><div class="kanban-card-title">技术方案 v2.0 提交评审</div><div class="kanban-card-meta"><span class="tag tag-yellow">P1</span></div></div>
+          </div>
+          <div class="kanban-col">
+            <div class="kanban-col-title"><span class="status-dot success"></span>已完成 <span class="kanban-col-count">3</span></div>
+            <div class="kanban-card"><div class="kanban-card-title">客户 B 启动会</div><div class="kanban-card-meta"><span class="tag tag-green">已完成</span></div></div>
+            <div class="kanban-card"><div class="kanban-card-title">技术方案评审</div><div class="kanban-card-meta"><span class="tag tag-green">已完成</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 页面 3: Project Detail（含项目助手 Copilot） ========== -->
+      <section class="page" id="page-project-detail">
+        <div class="page-breadcrumb"><a href="#" onclick="return false;">项目管理</a> / <span>阿里云A数据中台交付项目</span></div>
+
+        <div class="project-overview">
+          <div>
+            <div class="project-name-line">
+              <div class="project-name-text">阿里云A数据中台交付项目</div>
+              <span class="tag tag-blue">实施阶段</span>
+              <span class="tag tag-green">健康</span>
+            </div>
+            <div class="project-info-row">
+              <div class="project-info-item"><div class="project-info-label">客户</div><div class="project-info-value">阿里云客户A</div></div>
+              <div class="project-info-item"><div class="project-info-label">负责人</div><div class="project-info-value">吾明</div></div>
+              <div class="project-info-item"><div class="project-info-label">计划工期</div><div class="project-info-value">2026.03.01 - 2026.06.30</div></div>
+              <div class="project-info-item"><div class="project-info-label">团队成员</div><div class="project-info-value">8 人</div></div>
+              <div class="project-info-item"><div class="project-info-label">里程碑</div><div class="project-info-value">5 个 (3 已完成)</div></div>
+            </div>
+          </div>
+          <div class="health-ring">
+            <div class="health-ring-text"><div class="health-ring-num">78</div><div class="health-ring-label">健康度</div></div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active">概览</div>
+          <div class="tab">任务 (12)</div>
+          <div class="tab">里程碑 (5)</div>
+          <div class="tab">文件 (24)</div>
+          <div class="tab">风险 (2)</div>
+          <div class="tab">团队</div>
+          <div class="tab">时间线</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="title-with-icon"><svg class="ico ico-primary"><use href="#i-flag"/></svg>关键里程碑</span></div>
+          <div class="timeline">
+            <div class="timeline-item done"><div class="timeline-dot"></div><div class="timeline-title">项目启动会</div><div class="timeline-desc">2026.03.01 · 已完成</div></div>
+            <div class="timeline-item done"><div class="timeline-dot"></div><div class="timeline-title">需求调研与梳理</div><div class="timeline-desc">2026.03.15 · 已完成</div></div>
+            <div class="timeline-item done"><div class="timeline-dot"></div><div class="timeline-title">技术方案评审</div><div class="timeline-desc">2026.04.01 · 已完成</div></div>
+            <div class="timeline-item current"><div class="timeline-dot"></div><div class="timeline-title">数据接入与开发</div><div class="timeline-desc">2026.04.15 · 进行中（已完成 60%）</div></div>
+            <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-title">UAT 用户验收测试</div><div class="timeline-desc">2026.05.20 · 待开始</div></div>
+            <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-title">项目正式上线</div><div class="timeline-desc">2026.06.30 · 待开始</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 页面 4: Coach（含教练助手 Copilot） ========== -->
+      <section class="page" id="page-coach">
+        <div class="page-header"><div class="page-title">FDE</div></div>
+
+        <div class="coach-entries">
+          <div class="coach-entry-card"><div class="coach-entry-icon"><svg class="ico ico-xl ico-primary"><use href="#i-brain"/></svg></div><div class="coach-entry-title">知识问答</div><div class="coach-entry-desc">FDE 方法论与交付 SOP 智能问答</div></div>
+          <div class="coach-entry-card"><div class="coach-entry-icon"><svg class="ico ico-xl ico-primary"><use href="#i-map"/></svg></div><div class="coach-entry-title">流程指导</div><div class="coach-entry-desc">基于项目阶段推荐 Next Step</div></div>
+          <div class="coach-entry-card"><div class="coach-entry-icon"><svg class="ico ico-xl ico-primary"><use href="#i-book"/></svg></div><div class="coach-entry-title">案例推荐</div><div class="coach-entry-desc">智能匹配相似历史交付案例</div></div>
+          <div class="coach-entry-card"><div class="coach-entry-icon"><svg class="ico ico-xl ico-primary"><use href="#i-mic"/></svg></div><div class="coach-entry-title">AI 对练</div><div class="coach-entry-desc">客户沟通场景模拟训练</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="card">
+            <div class="card-title"><span class="title-with-icon"><svg class="ico ico-primary"><use href="#i-target"/></svg>推荐你的 Next Step <span class="tag tag-blue">实施阶段</span></span></div>
+            <div class="next-step-list">
+              <div class="next-step-item"><div class="next-step-num">1</div><div>完成数据源接入与质量校验，确保上游数据完整性</div></div>
+              <div class="next-step-item"><div class="next-step-num">2</div><div>组织一次客户内部演示，提前验证关键场景</div></div>
+              <div class="next-step-item"><div class="next-step-num">3</div><div>编写 UAT 测试用例，提前 2 周与客户对齐验收标准</div></div>
+              <div class="next-step-item"><div class="next-step-num">4</div><div>识别上线前可能的运维风险，准备应急预案</div></div>
+              <div class="next-step-item"><div class="next-step-num">5</div><div>启动客户培训计划，沉淀知识传递文档</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span class="title-with-icon"><svg class="ico ico-primary"><use href="#i-book"/></svg>相似案例推荐 <span style="font-size:12px;color:var(--text-3);font-weight:400;">基于当前项目特征</span></span></div>
+            <div class="case-card">
+              <div class="case-match">92%</div>
+              <div class="case-info">
+                <div class="case-title">某银行数据中台交付项目（金牌案例）</div>
+                <div class="case-meta">交付周期 4 个月 · 团队 10 人 · 王XX 主导</div>
+                <div class="case-tags"><span class="tag tag-blue">金融</span><span class="tag tag-blue">数据中台</span><span class="tag tag-yellow">金牌</span></div>
+              </div>
+            </div>
+            <div class="case-card">
+              <div class="case-match">85%</div>
+              <div class="case-info">
+                <div class="case-title">某零售集团数据治理项目</div>
+                <div class="case-meta">交付周期 5 个月 · 团队 8 人</div>
+                <div class="case-tags"><span class="tag tag-blue">零售</span><span class="tag tag-blue">数据治理</span></div>
+              </div>
+            </div>
+            <div class="case-card">
+              <div class="case-match">76%</div>
+              <div class="case-info">
+                <div class="case-title">某制造业数据资产盘点</div>
+                <div class="case-meta">交付周期 3 个月 · 团队 6 人</div>
+                <div class="case-tags"><span class="tag tag-blue">制造</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title"><span class="title-with-icon"><svg class="ico ico-primary"><use href="#i-mic"/></svg>AI 对练 · 选择剧本</span></div>
+          <div class="practice-list">
+            <div class="practice-item"><div class="practice-icon"><svg class="ico ico-lg ico-primary"><use href="#i-users"/></svg></div><div class="practice-name">客户首次需求沟通</div><span class="tag tag-blue">基础</span><div class="practice-arrow"><svg class="ico"><use href="#i-arrow-right"/></svg></div></div>
+            <div class="practice-item"><div class="practice-icon"><svg class="ico ico-lg ico-warning"><use href="#i-alert-triangle"/></svg></div><div class="practice-name">验收冲突处理</div><span class="tag tag-yellow">进阶</span><div class="practice-arrow"><svg class="ico"><use href="#i-arrow-right"/></svg></div></div>
+            <div class="practice-item"><div class="practice-icon"><svg class="ico ico-lg ico-danger"><use href="#i-shield-check"/></svg></div><div class="practice-name">续约谈判</div><span class="tag tag-red">高级</span><div class="practice-arrow"><svg class="ico"><use href="#i-arrow-right"/></svg></div></div>
+            <div class="practice-item"><div class="practice-icon"><svg class="ico ico-lg ico-primary"><use href="#i-trending-up"/></svg></div><div class="practice-name">高管汇报演练</div><span class="tag tag-yellow">进阶</span><div class="practice-arrow"><svg class="ico"><use href="#i-arrow-right"/></svg></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 页面 5: Files ========== -->
+      <section class="page" id="page-files">
+        <div class="page-header"><div class="page-title">文件中心</div><div style="display:flex;gap:8px;"><button class="btn btn-default"><svg class="ico"><use href="#i-folder"/></svg>新建文件夹</button><button class="btn btn-primary"><svg class="ico"><use href="#i-upload"/></svg>上传文件</button></div></div>
+
+        <div class="files-layout">
+          <div class="files-sidebar">
+            <div class="files-tree-item"><svg class="ico ico-muted"><use href="#i-users"/></svg><span>个人空间</span></div>
+            <div class="files-tree-item active"><svg class="ico"><use href="#i-project"/></svg><span>项目空间</span></div>
+            <div class="files-tree-children">
+              <div class="files-tree-item">阿里云A数据中台</div>
+              <div class="files-tree-item">客户 B 营销平台</div>
+              <div class="files-tree-item">客户 C 智能客服</div>
+            </div>
+            <div class="files-tree-item"><svg class="ico ico-muted"><use href="#i-users"/></svg><span>客户空间</span></div>
+            <div class="files-tree-item"><svg class="ico ico-muted"><use href="#i-paperclip"/></svg><span>共享给我</span></div>
+            <div class="files-tree-item"><svg class="ico ico-muted"><use href="#i-trash"/></svg><span>回收站</span></div>
+          </div>
+
+          <div class="files-main">
+            <div class="files-toolbar">
+              <span style="font-size:13px;color:var(--text-3);">项目空间 / 阿里云A数据中台 / 交付物</span>
+              <div style="margin-left:auto;display:flex;gap:8px;">
+                <div class="view-toggle"><div class="view-toggle-btn active"><svg class="ico ico-sm"><use href="#i-grid"/></svg></div><div class="view-toggle-btn"><svg class="ico ico-sm"><use href="#i-list"/></svg></div></div>
+              </div>
+            </div>
+            <div class="files-grid">
+              <div class="file-card"><div class="file-thumb folder"><svg class="ico ico-xl"><use href="#i-folder"/></svg></div><div class="file-name">需求文档</div><div class="file-meta">12 个文件</div></div>
+              <div class="file-card"><div class="file-thumb folder"><svg class="ico ico-xl"><use href="#i-folder"/></svg></div><div class="file-name">技术方案</div><div class="file-meta">8 个文件</div></div>
+              <div class="file-card selected"><div class="file-thumb pdf"><svg class="ico ico-xl"><use href="#i-file-pdf"/></svg></div><div class="file-name">项目交付方案 v2.1.pdf</div><div class="file-meta">2.4 MB · 昨天</div></div>
+              <div class="file-card"><div class="file-thumb doc"><svg class="ico ico-xl"><use href="#i-file-doc"/></svg></div><div class="file-name">需求规格说明书.docx</div><div class="file-meta">876 KB · 4-22</div></div>
+              <div class="file-card"><div class="file-thumb xlsx"><svg class="ico ico-xl"><use href="#i-file-xls"/></svg></div><div class="file-name">数据字典 v1.3.xlsx</div><div class="file-meta">1.2 MB · 4-21</div></div>
+              <div class="file-card"><div class="file-thumb ppt"><svg class="ico ico-xl"><use href="#i-file-ppt"/></svg></div><div class="file-name">客户演示材料.pptx</div><div class="file-meta">5.6 MB · 4-20</div></div>
+              <div class="file-card"><div class="file-thumb img"><svg class="ico ico-xl"><use href="#i-file-img"/></svg></div><div class="file-name">架构图_v3.png</div><div class="file-meta">340 KB · 4-19</div></div>
+              <div class="file-card"><div class="file-thumb pdf"><svg class="ico ico-xl"><use href="#i-file-pdf"/></svg></div><div class="file-name">UAT 测试用例.pdf</div><div class="file-meta">1.8 MB · 4-18</div></div>
+            </div>
+            <div class="files-footer">
+              <span>已用</span>
+              <div class="progress"><div class="progress-bar" style="width:12%;"></div></div>
+              <span><b>12.3 GB</b> / 100 GB</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 页面 6: AI Chat（全局） ========== -->
+      <section class="page" id="page-ai-chat" style="padding:24px;">
+        <div class="ai-chat-layout">
+          <div class="ai-history">
+            <div class="ai-history-header">
+              <div class="ai-history-search"><svg class="ico ico-sm ico-muted"><use href="#i-search"/></svg>搜索会话</div>
+              <button class="header-icon-btn" title="新建"><svg class="ico"><use href="#i-plus"/></svg></button>
+            </div>
+            <div class="ai-history-list">
+              <div class="ai-history-group-title"><svg class="ico ico-sm ico-warning"><use href="#i-star"/></svg>收藏</div>
+              <div class="ai-history-item">客户验收冲突处理思路</div>
+              <div class="ai-history-group-title"><svg class="ico ico-sm ico-muted"><use href="#i-calendar"/></svg>今日</div>
+              <div class="ai-history-item active">分析阿里云A项目风险</div>
+              <div class="ai-history-item">本周周报草稿生成</div>
+              <div class="ai-history-group-title"><svg class="ico ico-sm ico-muted"><use href="#i-sparkles"/></svg>场景会话</div>
+              <div class="ai-history-item"><span class="assistant-badge sm project">P</span><span>风险分析 - 阿里云A</span></div>
+              <div class="ai-history-item"><span class="assistant-badge sm task">T</span><span>批量延期任务</span></div>
+              <div class="ai-history-item"><span class="assistant-badge sm coach">C</span><span>验收阶段建议</span></div>
+              <div class="ai-history-group-title"><svg class="ico ico-sm ico-muted"><use href="#i-history"/></svg>昨日</div>
+              <div class="ai-history-item">FDE SOP 中关于 UAT 的规范</div>
+            </div>
+          </div>
+
+          <div class="ai-chat-main">
+            <div class="ai-chat-mode-bar">
+              <div class="ai-mode-btn"><svg class="ico ico-sm"><use href="#i-message"/></svg>通用对话</div>
+              <div class="ai-mode-btn active"><svg class="ico ico-sm"><use href="#i-book"/></svg>知识库 (RAG)</div>
+              <div class="ai-mode-btn"><svg class="ico ico-sm"><use href="#i-settings"/></svg>Agent</div>
+              <span style="margin-left:auto;font-size:11px;color:var(--text-3);display:inline-flex;align-items:center;gap:4px;"><svg class="ico ico-sm ico-primary"><use href="#i-sparkles"/></svg>智能路由已开启</span>
+            </div>
+
+            <div class="ai-messages">
+              <div class="msg msg-user">
+                <div class="msg-avatar">吾</div>
+                <div class="msg-content">
+                  <div class="msg-bubble">FDE 在 UAT 阶段需要重点关注哪些事项？</div>
+                  <div class="msg-time">14:25</div>
+                </div>
+              </div>
+              <div class="msg msg-ai">
+                <div class="msg-avatar"><span class="assistant-badge sm">AI</span></div>
+                <div class="msg-content">
+                  <div class="msg-bubble">
+                    根据 FDE 交付 SOP，UAT 阶段需重点关注以下 5 个事项：<br/><br/>
+                    <b>1. 测试用例覆盖度</b>：与客户共同评审用例，确保核心业务场景 100% 覆盖；<br/>
+                    <b>2. 缺陷分级与响应 SLA</b>：明确 P0/P1/P2 级缺陷的响应和修复时长；<br/>
+                    <b>3. 性能基线验证</b>：在生产等比环境下完成压测，留存性能报告；<br/>
+                    <b>4. 验收标准签字确认</b>：每个里程碑完成后，需客户签字（含电子签）；<br/>
+                    <b>5. 上线 Checklist</b>：提前 2 周完成上线 Checklist 评审，明确回滚方案。
+                  </div>
+                  <div class="ai-source">
+                    <div class="ai-source-title"><svg class="ico ico-sm ico-primary"><use href="#i-book"/></svg>引用来源</div>
+                    《FDE 交付 SOP v3.2》第 6 章 · 《UAT 验收规范》第 3 节
+                  </div>
+                  <div class="msg-time">14:25</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ai-input-area">
+              <div class="ai-input-box">
+                <textarea class="ai-input" placeholder="问点什么...（@ 引用上下文 · / 切换模式）"></textarea>
+                <div class="ai-input-tools">
+                  <button class="ai-tool"><svg class="ico ico-sm"><use href="#i-paperclip"/></svg>上传</button>
+                  <button class="ai-tool"><svg class="ico ico-sm"><use href="#i-at-sign"/></svg>引用</button>
+                  <button class="ai-tool"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg>模板</button>
+                  <button class="ai-send-btn"><svg class="ico ico-sm"><use href="#i-send"/></svg>发送</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-context-panel">
+            <h4><svg class="ico ico-sm ico-primary"><use href="#i-target"/></svg>当前会话上下文</h4>
+            <div class="ai-context-tag"><svg class="ico ico-sm ico-muted"><use href="#i-project"/></svg>项目: 阿里云A数据中台</div>
+            <div class="ai-context-tag"><svg class="ico ico-sm ico-muted"><use href="#i-book"/></svg>知识库: FDE SOP v3.2</div>
+            <h4 style="margin-top:20px;"><svg class="ico ico-sm ico-warning"><use href="#i-lightbulb"/></svg>推荐问题</h4>
+            <div class="ai-context-tag" style="cursor:pointer;">UAT 测试用例怎么编写？</div>
+            <div class="ai-context-tag" style="cursor:pointer;">如何处理验收争议？</div>
+            <div class="ai-context-tag" style="cursor:pointer;">上线 Checklist 模板</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========== AI Copilot 侧边栏（仅 3 个页面显示） ========== -->
+    <aside class="copilot" id="copilot" style="display:none;">
+      <div class="copilot-collapsed-bar" onclick="toggleCopilot()">
+        <div class="copilot-icon" id="copilot-icon-collapsed"><span class="assistant-badge sm">AI</span></div>
+        <div class="copilot-collapsed-text" id="copilot-collapsed-text">AI 助手</div>
+        <button class="btn-text" style="font-size:14px;"><svg class="ico ico-sm"><use href="#i-chevron-left"/></svg></button>
+      </div>
+      <div class="copilot-header">
+        <div class="copilot-icon" id="copilot-icon"><span class="assistant-badge">AI</span></div>
+        <div class="copilot-header-title" id="copilot-title">AI 助手</div>
+        <div class="copilot-header-actions">
+          <button class="btn-text" title="历史"><svg class="ico"><use href="#i-history"/></svg></button>
+          <button class="btn-text" title="新会话"><svg class="ico"><use href="#i-plus"/></svg></button>
+          <button class="btn-text" title="折叠" onclick="toggleCopilot()"><svg class="ico"><use href="#i-chevron-right"/></svg></button>
+        </div>
+      </div>
+      <div class="copilot-context">
+        <div class="copilot-context-label"><svg class="ico ico-sm ico-primary"><use href="#i-pin"/></svg>当前上下文 <span style="color:var(--text-4);">（自动感知）</span></div>
+        <div class="copilot-context-tags" id="copilot-context-tags"></div>
+      </div>
+      <div class="copilot-body" id="copilot-body"></div>
+      <div class="copilot-suggestions" id="copilot-suggestions"></div>
+      <div class="copilot-input-area">
+        <div class="copilot-input-box">
+          <!-- @ 引用上下文选择弹窗 -->
+          <div class="mention-popup" id="mention-popup">
+            <div class="mention-popup-search">
+              <svg class="ico ico-sm ico-muted"><use href="#i-search"/></svg>
+              <input type="text" id="mention-search-input" placeholder="搜索项目、任务、文件、客户..." autocomplete="off"/>
+              <span style="font-size:10px;color:var(--text-4);">ESC 关闭</span>
+            </div>
+            <div class="mention-popup-tabs" id="mention-popup-tabs">
+              <div class="mention-popup-tab active" data-cat="all">全部</div>
+              <div class="mention-popup-tab" data-cat="project"><svg class="ico ico-sm"><use href="#i-project"/></svg>项目</div>
+              <div class="mention-popup-tab" data-cat="task"><svg class="ico ico-sm"><use href="#i-task"/></svg>任务</div>
+              <div class="mention-popup-tab" data-cat="customer"><svg class="ico ico-sm"><use href="#i-users"/></svg>客户</div>
+              <div class="mention-popup-tab" data-cat="file"><svg class="ico ico-sm"><use href="#i-file"/></svg>文件</div>
+              <div class="mention-popup-tab" data-cat="case"><svg class="ico ico-sm"><use href="#i-book"/></svg>案例</div>
+            </div>
+            <div class="mention-popup-list" id="mention-popup-list"></div>
+          </div>
+          <textarea class="copilot-input" placeholder="问点什么... 输入 @ 引用上下文" id="copilot-input"></textarea>
+          <div class="copilot-input-tools">
+            <button class="copilot-tool-btn" title="上传文件"><svg class="ico ico-sm"><use href="#i-paperclip"/></svg></button>
+            <button class="copilot-tool-btn" title="@ 引用上下文" onclick="openMentionPopup()"><svg class="ico ico-sm"><use href="#i-at-sign"/></svg></button>
+            <button class="copilot-tool-btn" title="提示词模板"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg></button>
+            <button class="copilot-send-btn">发送</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ========== 页面切换 ========== */
+function switchPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+  const nav = document.querySelector('.nav-item[data-page="' + pageId + '"]');
+  if (nav) nav.classList.add('active');
+  renderCopilot(pageId);
+  document.querySelector('.main').scrollTop = 0;
+}
+document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+  item.addEventListener('click', () => switchPage(item.dataset.page));
+});
+
+/* ========== AI Copilot 渲染（按页面切换不同助手） ========== */
+const copilotConfig = {
+  'tasks': {
+    badgeKey: 'task', badgeLetter: 'T', name: '任务助手',
+    context: ['当前页面: 任务管理', '我负责的任务: 12 项'],
+    suggestions: ['创建一个 P0 任务', '分析下我的工作量', '把所有逾期任务延期到下周五'],
+    messages: [
+      {role: 'ai', text: '你好！我是 <b>任务助手</b><br/>我可以帮你：创建任务、查询任务、批量调整、工作量分析。所有写操作都会先预览给你确认。'},
+      {role: 'user', text: '创建一个明天截止的 P0 任务：完成客户A的POC方案'},
+      {role: 'ai', text: '好的，我已生成任务预览，请确认：', actionCard: {
+        titleIcon: 'i-plus', title: '创建任务',
+        status: 'pending',
+        rows: [
+          {label: '标题', value: '完成客户A的POC方案'},
+          {label: '优先级', value: 'P0', addClass: 'add'},
+          {label: '截止时间', value: '2026-04-29 18:00'},
+          {label: '关联项目', value: '阿里云A数据中台'}
+        ]
+      }},
+      {role: 'user', text: '把所有逾期任务延期到下周五'},
+      {role: 'ai', text: '我找到了 3 个逾期任务，请确认批量操作：', actionCard: {
+        titleIcon: 'i-history', title: '批量修改',
+        status: 'pending',
+        rows: [
+          {label: '操作', value: '修改截止时间'},
+          {label: '新值', value: '2026-05-02', addClass: 'add'}
+        ],
+        impact: ['1. 客户 B 数据接入测试（原 4-25）', '2. 内部技术分享 PPT（原 4-26）', '3. 季度复盘报告（原 4-27）']
+      }}
+    ]
+  },
+  'project-detail': {
+    badgeKey: 'project', badgeLetter: 'P', name: '项目助手',
+    context: ['当前项目: 阿里云A数据中台', '阶段: 实施中', '健康度: 78'],
+    suggestions: ['分析下当前项目风险', '生成本周项目周报', '把负责人改成张三'],
+    messages: [
+      {role: 'ai', text: '你好！我是 <b>项目助手</b><br/>我已绑定<b>阿里云A数据中台</b>项目，可帮你分析风险、生成报告、调整成员/里程碑。'},
+      {role: 'user', text: '分析下当前项目的风险'},
+      {role: 'ai', text: '基于项目当前状态，我识别出以下 3 个风险：', report: {
+        titleIcon: 'i-alert-triangle', title: '项目风险分析报告',
+        risks: [
+          {level: 'high', label: '高', desc: '数据接入进度滞后 5 天，可能影响 5/20 UAT 节点'},
+          {level: 'mid', label: '中', desc: '客户方接口联调资源不足，建议提前 1 周协调'},
+          {level: 'low', label: '低', desc: '上线前性能压测尚未启动，建议本周内排期'}
+        ]
+      }},
+      {role: 'user', text: '把负责人改成张三'},
+      {role: 'ai', text: '已生成修改预览，请确认：', actionCard: {
+        titleIcon: 'i-settings', title: '修改项目负责人',
+        status: 'pending',
+        rows: [
+          {label: '项目', value: '阿里云A数据中台'},
+          {label: '原负责人', value: '吾明', delClass: 'del'},
+          {label: '新负责人', value: '张三', addClass: 'add'}
+        ]
+      }}
+    ]
+  },
+  'coach': {
+    badgeKey: 'coach', badgeLetter: 'C', name: '教练助手',
+    context: ['当前项目: 阿里云A数据中台', '项目阶段: 实施中', '我的等级: P5'],
+    suggestions: ['这个阶段下一步该做什么', '推荐几个相似案例', '开始一场客户验收冲突对练'],
+    messages: [
+      {role: 'ai', text: '你好！我是你的 <b>FDE 工作教练</b><br/>融合方法论 + 案例库 + 当前项目阶段，为你提供个性化的指导和学习建议。'},
+      {role: 'user', text: '这个阶段我下一步该做什么？'},
+      {role: 'ai', text: '基于你当前所在的<b>实施阶段</b>，我推荐以下 5 个 Next Step：', nextSteps: [
+        '完成数据源接入与质量校验，确保上游数据完整性',
+        '组织一次客户内部演示，提前验证关键场景',
+        '编写 UAT 测试用例，提前 2 周与客户对齐验收标准',
+        '识别上线前可能的运维风险，准备应急预案',
+        '启动客户培训计划，沉淀知识传递文档'
+      ]},
+      {role: 'user', text: '开始一场客户验收冲突处理对练'},
+      {role: 'ai', text: '已为你准备好剧本，请确认启动：', actionCard: {
+        titleIcon: 'i-mic', title: '启动 AI 对练',
+        status: 'pending',
+        rows: [
+          {label: '剧本', value: '验收冲突处理'},
+          {label: '难度', value: '进阶'},
+          {label: '预计时长', value: '20-30 分钟'},
+          {label: 'AI 角色', value: '客户技术总监（强势型）'}
+        ]
+      }}
+    ]
+  },
+  'files': {
+    badgeKey: 'files', badgeLetter: 'F', name: '文件助手',
+    context: ['当前路径: 项目空间/阿里云A/交付物', '已选中: 项目交付方案 v2.1.pdf', '文件夹: 6 个文件'],
+    suggestions: [
+      '帮我找客户A最近 1 周的需求文档',
+      '总结下当前 PDF 的关键信息',
+      '对比 v2.0 和 v2.1 的差异',
+      '把所有验收文档归档到 客户验收/2026Q2'
+    ],
+    messages: [
+      {role: 'ai', text: '你好！我是 <b>文件助手</b><br/>我可以帮你：智能搜索文件、总结文档、对比版本差异、批量归档。已自动绑定<b>当前文件夹路径</b>与<b>选中文件</b>。'},
+      {role: 'user', text: '帮我找客户A最近 1 周的需求文档'},
+      {role: 'ai', text: '为你找到 4 份相关文档：', searchResults: [
+        {iconId: 'i-file-doc', iconCls: 'ico-primary',  name: '需求规格说明书.docx',     meta: '876 KB · 4-22 · 阿里云A数据中台'},
+        {iconId: 'i-file-pdf', iconCls: 'ico-danger',   name: '客户需求确认单.pdf',       meta: '1.2 MB · 4-21 · 阿里云A数据中台'},
+        {iconId: 'i-file-pdf', iconCls: 'ico-danger',   name: 'POC 需求清单.pdf',         meta: '520 KB · 4-19 · 阿里云A数据中台'},
+        {iconId: 'i-file-doc', iconCls: 'ico-primary',  name: '数据字典补充说明.docx',   meta: '340 KB · 4-18 · 阿里云A数据中台'}
+      ]},
+      {role: 'user', text: '总结下《项目交付方案 v2.1.pdf》的关键信息'},
+      {role: 'ai', text: '已为你总结 PDF 的关键信息：', report: {
+        titleIcon: 'i-file-pdf', title: '项目交付方案 v2.1 · 关键信息',
+        risks: [
+          {level: 'high', label: '核心', desc: '交付周期 4 个月，分 5 个里程碑，UAT 安排在 2026-05-20'},
+          {level: 'mid',  label: '变更', desc: '相比 v2.0，新增数据接入模块（第 3 章）、调整 UAT 验收标准（第 6 章）'},
+          {level: 'low',  label: '范围', desc: '交付范围包含数据中台底座 + 4 个业务主题域（销售/库存/财务/客户）'}
+        ]
+      }},
+      {role: 'user', text: '把所有验收文档归档到 客户验收/2026Q2 文件夹'},
+      {role: 'ai', text: '我找到了 8 个验收文档，请确认批量归档：', actionCard: {
+        titleIcon: 'i-folder', title: '批量归档',
+        status: 'pending',
+        rows: [
+          {label: '操作',     value: '移动文件'},
+          {label: '目标位置', value: '客户验收 / 2026Q2', addClass: 'add'},
+          {label: '文件数量', value: '8 个'}
+        ],
+        impact: ['1. UAT 测试用例.pdf', '2. 客户验收报告 v1.docx', '3. UAT 缺陷清单.xlsx', '4. 上线 Checklist.pdf', '... 还有 4 个']
+      }}
+    ]
+  }
+};
+
+/* SVG icon helper */
+function icoSvg(id, cls) { return `<svg class="ico ${cls||''}"><use href="#${id}"/></svg>`; }
+function badgeHtml(key, letter, size) {
+  const sizeCls = size === 'sm' ? 'sm' : (size === 'lg' ? 'lg' : '');
+  return `<span class="assistant-badge ${key} ${sizeCls}">${letter}</span>`;
+}
+
+function renderCopilot(pageId) {
+  const copilot = document.getElementById('copilot');
+  const cfg = copilotConfig[pageId];
+  if (!cfg) { copilot.style.display = 'none'; return; }
+  copilot.style.display = 'flex';
+  copilot.classList.remove('collapsed');
+
+  // 助手徽章 + 名称
+  const badge = badgeHtml(cfg.badgeKey, cfg.badgeLetter);
+  const badgeSm = badgeHtml(cfg.badgeKey, cfg.badgeLetter, 'sm');
+  document.getElementById('copilot-icon').innerHTML = badge;
+  document.getElementById('copilot-icon-collapsed').innerHTML = badgeSm;
+  document.getElementById('copilot-title').textContent = cfg.name;
+  document.getElementById('copilot-collapsed-text').textContent = cfg.name;
+
+  // 上下文
+  const ctxEl = document.getElementById('copilot-context-tags');
+  ctxEl.innerHTML = cfg.context.map(c => `<span class="copilot-context-tag">${c} <span class="close">×</span></span>`).join('') + `<span class="copilot-context-add">+ 添加</span>`;
+
+  // 消息
+  const bodyEl = document.getElementById('copilot-body');
+  bodyEl.innerHTML = cfg.messages.map(m => {
+    if (m.role === 'user') {
+      return `<div class="copilot-msg copilot-msg-user"><div class="copilot-bubble">${m.text}</div></div>`;
+    }
+    let bubble = `<div class="copilot-msg-avatar-wrap">${badgeSm}</div><div class="copilot-bubble">${m.text}`;
+    if (m.actionCard) {
+      const ac = m.actionCard;
+      const statusHtml = ac.status === 'pending'
+        ? `<span class="action-status pending">${icoSvg('i-hourglass','ico-sm')}待确认</span>`
+        : ac.status === 'running'
+          ? `<span class="action-status running">${icoSvg('i-history','ico-sm')}执行中</span>`
+          : `<span class="action-status done">${icoSvg('i-check-circle','ico-sm')}已完成</span>`;
+      const titleIconHtml = ac.titleIcon ? icoSvg(ac.titleIcon, 'ico-sm ico-primary') : '';
+      bubble += `<div class="action-card"><div class="action-card-header"><span class="action-card-title">${titleIconHtml}${ac.title}</span>${statusHtml}</div><div class="action-card-body">`;
+      ac.rows.forEach(r => {
+        bubble += `<div class="action-row"><div class="action-row-label">${r.label}</div><div class="action-row-value ${r.addClass||''} ${r.delClass||''}">${r.value}</div></div>`;
+      });
+      if (ac.impact) {
+        bubble += `<div class="action-impact">${icoSvg('i-alert-triangle','ico-sm ico-warning')}影响 ${ac.impact.length} 个对象<div class="action-impact-list">` + ac.impact.map(i => `<div class="action-impact-list-item">${i}</div>`).join('') + `</div></div>`;
+      }
+      bubble += `</div><div class="action-card-footer"><button class="btn btn-default btn-sm">取消</button><button class="btn btn-primary btn-sm">${icoSvg('i-check-circle','ico-sm')}确认执行</button></div></div>`;
+    }
+    if (m.report) {
+      const rTitleIcon = m.report.titleIcon ? icoSvg(m.report.titleIcon, 'ico-sm ico-primary') : '';
+      bubble += `<div class="report-card"><div class="report-card-title">${rTitleIcon}${m.report.title}</div>`;
+      m.report.risks.forEach(r => {
+        bubble += `<div class="report-risk-row"><span class="risk-level ${r.level}">${r.label}</span><span>${r.desc}</span></div>`;
+      });
+      bubble += `</div>`;
+    }
+    if (m.nextSteps) {
+      bubble += `<div class="next-step-list">` + m.nextSteps.map((s,i) => `<div class="next-step-item"><div class="next-step-num">${i+1}</div><div>${s}</div></div>`).join('') + `</div>`;
+    }
+    if (m.searchResults) {
+      bubble += `<div class="search-results-card">` + m.searchResults.map(r => `<div class="search-result-item">${icoSvg(r.iconId, r.iconCls + ' ico-lg')}<div class="search-result-info"><div class="search-result-name">${r.name}</div><div class="search-result-meta">${r.meta}</div></div><button class="btn-text">${icoSvg('i-arrow-right','ico-sm')}</button></div>`).join('') + `</div>`;
+    }
+    bubble += `</div>`;
+    return `<div class="copilot-msg copilot-msg-ai">${bubble}</div>`;
+  }).join('');
+
+  // 推荐 chip
+  document.getElementById('copilot-suggestions').innerHTML = cfg.suggestions.map(s => `<span class="copilot-suggestion-chip">${s}</span>`).join('');
+
+  // 滚动到底部
+  setTimeout(() => { bodyEl.scrollTop = bodyEl.scrollHeight; }, 50);
+}
+
+function toggleCopilot() {
+  document.getElementById('copilot').classList.toggle('collapsed');
+}
+
+/* ========== @ 引用上下文选择弹窗 ========== */
+const mentionData = [
+  // 项目
+  {cat: 'project', iconId: 'i-project', iconCls: 'ico-primary', name: '阿里云A数据中台交付项目', meta: '实施阶段 · 健康度 78 · 8 人'},
+  {cat: 'project', iconId: 'i-project', iconCls: 'ico-primary', name: '客户 B 营销数据平台', meta: '验收阶段 · 健康度 65 · 5 人'},
+  {cat: 'project', iconId: 'i-project', iconCls: 'ico-primary', name: '客户 C 智能客服项目', meta: '实施阶段 · 健康度 35 · 6 人'},
+  {cat: 'project', iconId: 'i-project', iconCls: 'ico-primary', name: '客户 D 数据治理咨询', meta: '启动阶段 · 健康度 -- · 3 人'},
+  // 任务
+  {cat: 'task', iconId: 'i-task', iconCls: 'ico-success', name: '完成阿里云A客户的 POC 方案', meta: 'P0 · 明天截止 · 进行中'},
+  {cat: 'task', iconId: 'i-task', iconCls: 'ico-success', name: '阿里云A数据接入开发', meta: 'P0 · 进行中 · 已 2 天'},
+  {cat: 'task', iconId: 'i-task', iconCls: 'ico-success', name: '本周项目周报编写', meta: 'P1 · 进行中'},
+  {cat: 'task', iconId: 'i-task', iconCls: 'ico-success', name: '需求评审会议材料准备', meta: 'P1 · 周五截止 · 待办'},
+  {cat: 'task', iconId: 'i-task', iconCls: 'ico-success', name: '客户 C 风险跟踪', meta: 'P0 · 进行中'},
+  // 客户
+  {cat: 'customer', iconId: 'i-users', iconCls: 'ico-primary', name: '阿里云客户A', meta: '战略客户 · 3 个在交付项目'},
+  {cat: 'customer', iconId: 'i-users', iconCls: 'ico-primary', name: '客户 B（零售集团）', meta: '重点客户 · 2 个在交付项目'},
+  {cat: 'customer', iconId: 'i-users', iconCls: 'ico-primary', name: '客户 C（金融行业）', meta: '重点客户 · 1 个在交付项目'},
+  // 文件
+  {cat: 'file', iconId: 'i-file-pdf', iconCls: 'ico-danger', name: '项目交付方案 v2.1.pdf', meta: '2.4 MB · 阿里云A数据中台'},
+  {cat: 'file', iconId: 'i-file-doc', iconCls: 'ico-primary', name: '需求规格说明书.docx', meta: '876 KB · 阿里云A数据中台'},
+  {cat: 'file', iconId: 'i-file-xls', iconCls: 'ico-success', name: '数据字典 v1.3.xlsx', meta: '1.2 MB · 阿里云A数据中台'},
+  {cat: 'file', iconId: 'i-file-pdf', iconCls: 'ico-danger', name: 'UAT 测试用例.pdf', meta: '1.8 MB · 阿里云A数据中台'},
+  // 案例
+  {cat: 'case', iconId: 'i-book', iconCls: 'ico-primary', name: '某银行数据中台交付项目（金牌案例）', meta: '匹配度 92% · 4 个月 · 10 人'},
+  {cat: 'case', iconId: 'i-book', iconCls: 'ico-primary', name: '某零售集团数据治理项目', meta: '匹配度 85% · 5 个月 · 8 人'},
+  {cat: 'case', iconId: 'i-book', iconCls: 'ico-primary', name: '某制造业数据资产盘点', meta: '匹配度 76% · 3 个月 · 6 人'}
+];
+let mentionState = { activeCat: 'all', keyword: '', highlightIdx: 0 };
+
+function openMentionPopup() {
+  const popup = document.getElementById('mention-popup');
+  popup.classList.add('show');
+  mentionState.activeCat = 'all';
+  mentionState.keyword = '';
+  mentionState.highlightIdx = 0;
+  document.querySelectorAll('#mention-popup-tabs .mention-popup-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.cat === 'all');
+  });
+  const search = document.getElementById('mention-search-input');
+  search.value = '';
+  renderMentionList();
+  setTimeout(() => search.focus(), 50);
+}
+
+function closeMentionPopup() {
+  document.getElementById('mention-popup').classList.remove('show');
+}
+
+function renderMentionList() {
+  const list = document.getElementById('mention-popup-list');
+  const kw = mentionState.keyword.toLowerCase().trim();
+  const filtered = mentionData.filter(item => {
+    if (mentionState.activeCat !== 'all' && item.cat !== mentionState.activeCat) return false;
+    if (kw && !item.name.toLowerCase().includes(kw) && !item.meta.toLowerCase().includes(kw)) return false;
+    return true;
+  });
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="mention-popup-empty">无匹配结果，换个关键词试试</div>';
+    return;
+  }
+  if (mentionState.highlightIdx >= filtered.length) mentionState.highlightIdx = 0;
+  list.innerHTML = filtered.map((item, idx) => `
+    <div class="mention-popup-item ${idx === mentionState.highlightIdx ? 'highlight' : ''}" data-idx="${idx}">
+      <div class="mention-popup-item-icon">${icoSvg(item.iconId, item.iconCls + ' ico-lg')}</div>
+      <div class="mention-popup-item-info">
+        <div class="mention-popup-item-name">${item.name}</div>
+        <div class="mention-popup-item-meta">${item.meta}</div>
+      </div>
+    </div>
+  `).join('');
+  // 绑定点击
+  list.querySelectorAll('.mention-popup-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.idx);
+      selectMentionItem(filtered[idx]);
+    });
+  });
+}
+
+function selectMentionItem(item) {
+  // 1) 在输入框光标处插入 @引用
+  const input = document.getElementById('copilot-input');
+  const mentionText = `@${item.name} `;
+  const start = input.selectionStart || input.value.length;
+  const end = input.selectionEnd || input.value.length;
+  input.value = input.value.slice(0, start) + mentionText + input.value.slice(end);
+  input.focus();
+  input.selectionStart = input.selectionEnd = start + mentionText.length;
+  // 2) 同步追加到上下文标签区
+  const ctxEl = document.getElementById('copilot-context-tags');
+  const existing = Array.from(ctxEl.querySelectorAll('.copilot-context-tag')).some(t => t.textContent.includes(item.name));
+  if (!existing) {
+    const addBtn = ctxEl.querySelector('.copilot-context-add');
+    const tag = document.createElement('span');
+    tag.className = 'copilot-context-tag';
+    tag.innerHTML = `${icoSvg(item.iconId, item.iconCls + ' ico-sm')} ${item.name} <span class="close" onclick="this.parentElement.remove()">×</span>`;
+    ctxEl.insertBefore(tag, addBtn);
+  }
+  closeMentionPopup();
+}
+
+// 事件委托：Tab 切换、搜索、键盘
+document.addEventListener('DOMContentLoaded', () => bindMentionEvents());
+function bindMentionEvents() {
+  document.querySelectorAll('#mention-popup-tabs .mention-popup-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      mentionState.activeCat = tab.dataset.cat;
+      mentionState.highlightIdx = 0;
+      document.querySelectorAll('#mention-popup-tabs .mention-popup-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderMentionList();
+    });
+  });
+  const search = document.getElementById('mention-search-input');
+  search.addEventListener('input', e => {
+    mentionState.keyword = e.target.value;
+    mentionState.highlightIdx = 0;
+    renderMentionList();
+  });
+  search.addEventListener('keydown', e => {
+    const items = document.querySelectorAll('#mention-popup-list .mention-popup-item');
+    if (e.key === 'Escape') { closeMentionPopup(); }
+    else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      mentionState.highlightIdx = (mentionState.highlightIdx + 1) % items.length;
+      renderMentionList();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      mentionState.highlightIdx = (mentionState.highlightIdx - 1 + items.length) % items.length;
+      renderMentionList();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const highlighted = document.querySelector('#mention-popup-list .mention-popup-item.highlight');
+      if (highlighted) highlighted.click();
+    }
+  });
+  // 输入框监听 @ 自动唤起
+  const cInput = document.getElementById('copilot-input');
+  cInput.addEventListener('keyup', e => {
+    if (e.key === '@') openMentionPopup();
+  });
+  // 点击外部关闭
+  document.addEventListener('click', e => {
+    const popup = document.getElementById('mention-popup');
+    if (!popup.classList.contains('show')) return;
+    if (popup.contains(e.target)) return;
+    if (e.target.closest('.copilot-tool-btn')) return;
+    closeMentionPopup();
+  });
+}
+// 兜底：DOMContentLoaded 已触发的情况下立即绑定
+if (document.readyState !== 'loading') bindMentionEvents();
+
+/* 默认初始化 */
+renderCopilot('dashboard');
+</script>
+</body>
+</html>
