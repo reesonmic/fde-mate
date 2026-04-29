@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fde_workbench
+      MYSQL_CHARSET: utf8mb4
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  elasticsearch:
+    image: elasticsearch:8.12.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+
+  api:
+    build:
+      context: ../../api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: mysql+aiomysql://root:root@mysql:3306/fde_workbench?charset=utf8mb4
+      REDIS_URL: redis://redis:6379/0
+      ES_URL: http://elasticsearch:9200
+      AI_ORCHESTRATOR_URL: http://ai-orchestrator:8090
+      JWT_SECRET_KEY: dev-secret-key
+    depends_on:
+      - mysql
+      - redis
+      - elasticsearch
+
+  ai-orchestrator:
+    build:
+      context: ../../ai-orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+    depends_on:
+      - api
+
+  web:
+    build:
+      context: ../../web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  mysql_data:

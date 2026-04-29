@@ -1,0 +1,106 @@
+"""
+Authentication Service - login/token/password.
+"""
+from datetime import datetime, timedelta
+
+from fastapi import Depends
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from sqlalchemy import select
+
+from app.config.settings import settings
+from app.deps.db import get_async_session
+from app.exceptions.biz import AuthException, TokenInvalidException
+from app.models.user import User
+from app.schemas.auth import LoginRequest, TokenPair, UserInfo
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class AuthService:
+    def __init__(self, session):
+        self.session = session
+
+    async def login(self, req: LoginRequest) -> TokenPair:
+        result = await self.session.execute(
+            select(User).where(User.email == req.username, User.is_deleted == 0)
+        )
+        user = result.scalar_one_or_none()
+        if not user:
+            result2 = await self.session.execute(
+                select(User).where(User.name == req.username, User.is_deleted == 0)
+            )
+            user = result2.scalar_one_or_none()
+        if not user or not pwd_context.verify(req.password, user.password_hash):
+            raise AuthException("用户名或密码错误")
+        return await self._create_token_pair(user)
+
+    async def refresh(self, refresh_token: str) -> TokenPair:
+        try:
+            payload = jwt.decode(refresh_token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+            if payload.get("type") != "refresh":
+                raise TokenInvalidException()
+            user_id = int(payload.get("sub"))
+        except JWTError:
+            raise TokenInvalidException()
+
+        result = await self.session.execute(select(User).where(User.id == user_id, User.is_deleted == 0))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise TokenInvalidException()
+        return await self._create_token_pair(user)
+
+    async def get_current_user(self, token: str) -> UserInfo:
+        try:
+            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+            if payload.get("type") != "access":
+                raise TokenInvalidException()
+            user_id = int(payload.get("sub"))
+        except JWTError:
+            raise TokenInvalidException()
+
+        result = await self.session.execute(select(User).where(User.id == user_id, User.is_deleted == 0))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise AuthException()
+        return UserInfo(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            avatar=user.avatar,
+            roles=user.roles_list,
+            level=user.level,
+        )
+
+    def hash_password(self, password: str) -> str:
+        return pwd_context.hash(password)
+
+    async def _create_token_pair(self, user: User) -> TokenPair:
+        now = datetime.utcnow()
+        access_exp = now + timedelta(minutes=settings.jwt_expire_minutes)
+        refresh_exp = now + timedelta(days=7)
+
+        access_payload = {
+            "sub": str(user.id),
+            "type": "access",
+            "roles": user.roles,
+            "exp": access_exp,
+        }
+        refresh_payload = {
+            "sub": str(user.id),
+            "type": "refresh",
+            "exp": refresh_exp,
+        }
+
+        access_token = jwt.encode(access_payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+        refresh_token = jwt.encode(refresh_payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+
+        return TokenPair(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=settings.jwt_expire_minutes * 60,
+        )
+
+
+def get_auth_service(session=Depends(get_async_session)) -> AuthService:
+    return AuthService(session)
