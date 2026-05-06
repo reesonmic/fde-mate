@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workspace/api
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        run: pip install poetry==1.8.0
+      - name: Install dependencies
+        run: poetry install --no-root
+      - name: Lint (ruff)
+        run: poetry run ruff check app
+      - name: Type check (mypy)
+        run: poetry run mypy app --ignore-missing-imports
+      - name: Run tests
+        run: poetry run pytest tests/ -v --tb=short
+        env:
+          JWT_SECRET_KEY: "test-secret-key-for-ci-pipeline-only"
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workspace/web
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: workspace/web/package-lock.json
+      - run: npm ci
+      - name: Type check
+        run: npx vue-tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - run: npm run test
+
+  orchestrator-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workspace/ai-orchestrator
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        run: pip install poetry==1.8.0
+      - name: Install dependencies
+        run: poetry install --no-root
+      - name: Lint (ruff)
+        run: poetry run ruff check app
+      - name: Run tests
+        run: poetry run pytest tests/ -v --tb=short
+
+  build-images:
+    needs: [backend-test, frontend-test, orchestrator-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v5
+        with:
+          context: workspace/api
+          push: false
+          tags: fde-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: workspace/web
+          push: false
+          tags: fde-web:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build Orchestrator image
+        uses: docker/build-push-action@v5
+        with:
+          context: workspace/ai-orchestrator
+          push: false
+          tags: fde-orchestrator:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

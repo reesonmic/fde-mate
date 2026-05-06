@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import ActionCard from './cards/ActionCard.vue'
 import ReportCard from './cards/ReportCard.vue'
 import NextStepsCard from './cards/NextStepsCard.vue'
@@ -14,6 +16,27 @@ interface Props {
 const props = defineProps<Props>()
 
 const isUser = computed(() => props.message.role === 'user')
+
+const renderedContent = computed(() => {
+  if (isUser.value || props.message.type === 'text') {
+    const text = props.message.content || ''
+    let html: string
+    // Basic code block detection
+    if (text.includes('```')) {
+      html = marked.parse(text, { async: false }) as string
+    } else {
+      // Escape HTML for plain text
+      html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>')
+    }
+    return DOMPurify.sanitize(html)
+  }
+  // Fallback: sanitize any non-text/unknown message types
+  return DOMPurify.sanitize(props.message.content || '')
+})
 
 const messageClass = computed(() => {
   return isUser.value ? 'message-renderer--user' : 'message-renderer--assistant'
@@ -30,9 +53,11 @@ const messageClass = computed(() => {
     <!-- Assistant message -->
     <div v-else class="message-content message-content--assistant">
       <!-- Plain text response -->
-      <div v-if="message.type === 'text'" class="message-text">
-        {{ message.content }}
-      </div>
+      <div
+        v-if="message.type === 'text'"
+        class="message-text"
+        v-html="renderedContent"
+      ></div>
 
       <!-- Action card (requires confirmation) -->
       <ActionCard
@@ -60,9 +85,7 @@ const messageClass = computed(() => {
       />
 
       <!-- Fallback to text -->
-      <div v-else class="message-text">
-        {{ message.content }}
-      </div>
+      <div v-else class="message-text" v-html="renderedContent"></div>
     </div>
   </div>
 </template>
@@ -97,6 +120,72 @@ const messageClass = computed(() => {
 
 .message-text {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.message-text :deep(pre) {
+  background: var(--color-fill-tertiary);
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+.message-text :deep(code) {
+  background: var(--color-fill-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.message-text :deep(pre code) {
+  background: none;
+  padding: 0;
+}
+
+.message-text :deep(p) {
+  margin: 8px 0;
+}
+
+.message-text :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.message-text :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.message-text :deep(ul),
+.message-text :deep(ol) {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.message-text :deep(li) {
+  margin: 4px 0;
+}
+
+.message-text :deep(strong) {
+  font-weight: 600;
+}
+
+.message-text :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.message-text :deep(th),
+.message-text :deep(td) {
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.message-text :deep(th) {
+  background: var(--color-fill-tertiary);
+  font-weight: 600;
 }
 </style>

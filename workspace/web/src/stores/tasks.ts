@@ -56,7 +56,7 @@ export const useTasksStore = defineStore('tasks', () => {
 
   const updateTask = async (id: number, data: Partial<TaskDTO>) => {
     const task = await tasksApi.update(id, data)
-    const index = tasks.value.findIndex((t) => Number(t.id) === id)
+    const index = tasks.value.findIndex((t) => t.id === id)
     if (index !== -1) {
       tasks.value[index] = task
     }
@@ -65,7 +65,7 @@ export const useTasksStore = defineStore('tasks', () => {
 
   const deleteTask = async (id: number) => {
     await tasksApi.delete(id)
-    tasks.value = tasks.value.filter((t) => Number(t.id) !== id)
+    tasks.value = tasks.value.filter((t) => t.id !== id)
   }
 
   return {

@@ -14,17 +14,23 @@ class BizException(Exception):
         code: int,
         message: str,
         details: Optional[Any] = None,
+        http_status: Optional[int] = None,
     ):
         self.code = code
         self.message = message
         self.details = details
+        self._http_status = http_status
         super().__init__(message)
 
     @property
     def http_status(self) -> int:
         """Get HTTP status code based on error code."""
+        if self._http_status is not None:
+            return self._http_status
         if self.code >= 9000:
             return 500
+        if self.code in (BIZ_PERMISSION_DENIED,):
+            return 403
         return 400
 
 

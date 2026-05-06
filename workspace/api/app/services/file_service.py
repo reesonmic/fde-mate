@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.settings import settings
 from app.exceptions.biz import FileNotFoundException, PermissionDeniedException
+from app.models.file import FileMeta
 from app.repositories.file_repo import FileRepository
 from app.schemas.file import (
     FileMetaDTO, UploadTokenRequest, UploadTokenResponse,
@@ -51,13 +52,14 @@ class FileService:
         return {"deleted": True}
 
     async def batch_delete(self, ids: list[int], user_id: int) -> dict:
-        deleted = 0
-        for fid in ids:
-            f = await self.repo.get(fid)
-            if f and f.owner_id == user_id:
-                await self.repo.soft_delete(fid)
-                deleted += 1
-        return {"deleted": deleted}
+        from sqlalchemy import update
+        result = await self.session.execute(
+            update(FileMeta)
+            .where(FileMeta.id.in_(ids), FileMeta.owner_id == user_id, FileMeta.is_deleted == 0)
+            .values(is_deleted=1)
+        )
+        await self.session.flush()
+        return {"deleted": result.rowcount}
 
     async def get_upload_token(self, req: UploadTokenRequest, user_id: int) -> UploadTokenResponse:
         used = await self.repo.get_quota(user_id)

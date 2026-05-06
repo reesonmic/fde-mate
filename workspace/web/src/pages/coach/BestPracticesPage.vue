@@ -4,10 +4,11 @@ import { Row, Col, Input, Spin, Empty, Tag, Card, Select } from 'ant-design-vue'
 import { SearchOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { coachApi } from '@apis/modules/coach'
+import type { BestPracticeDTO } from '@/types/business'
 import BestPracticeCard from '@/components/business/BestPracticeCard.vue'
 
 const router = useRouter()
-const practices = ref<any[]>([])
+const practices = ref<BestPracticeDTO[]>([])
 const searchQuery = ref('')
 const categoryFilter = ref('')
 const loading = ref(false)

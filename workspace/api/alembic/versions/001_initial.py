@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column("is_deleted", sa.SmallInteger, nullable=False, server_default="0"),
     )
 
-    # task
+    # task (FK to project - deferred, see below)
     op.create_table(
         "task",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
@@ -38,9 +38,9 @@ def upgrade() -> None:
         sa.Column("status", sa.String(20), nullable=False, server_default="todo"),
         sa.Column("priority", sa.String(10), nullable=False, server_default="p2"),
         sa.Column("assignee_id", sa.Integer, sa.ForeignKey("fde_user.id")),
-        sa.Column("project_id", sa.Integer, sa.ForeignKey("project.id")),
+        sa.Column("project_id", sa.Integer),
         sa.Column("due_at", sa.DateTime),
-        sa.Column("tags", sa.JSON, server_default="[]"),
+        sa.Column("tags", sa.JSON),
         sa.Column("creator_id", sa.Integer, sa.ForeignKey("fde_user.id")),
         sa.Column("gmt_create", sa.DateTime, nullable=False, server_default=sa.func.now()),
         sa.Column("gmt_modified", sa.DateTime, nullable=False, server_default=sa.func.now()),
@@ -116,6 +116,9 @@ def upgrade() -> None:
         sa.Column("gmt_modified", sa.DateTime, nullable=False, server_default=sa.func.now()),
         sa.Column("is_deleted", sa.SmallInteger, nullable=False, server_default="0"),
     )
+
+    # Add FK constraint on task.project_id now that project table exists
+    op.create_foreign_key("fk_task_project", "task", "project", ["project_id"], ["id"])
 
     # project_member
     op.create_table(
@@ -276,6 +279,7 @@ def downgrade() -> None:
     op.drop_table("risk")
     op.drop_table("milestone")
     op.drop_table("project_member")
+    op.drop_foreign_key("task", "fk_task_project")
     op.drop_table("project")
     op.drop_table("opportunity")
     op.drop_table("contact")

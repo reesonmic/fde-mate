@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Card, Button } from 'ant-design-vue'
-import KanbanCard from './KanbanCard.vue'
+import { ref } from 'vue'
 import type { TaskDTO } from '@/types/api'
 
 interface Props {
-  tasks: Record<string, TaskDTO[]>
+  tasksByStatus: Record<string, TaskDTO[]>
 }
 
 const props = defineProps<Props>()
 
+const emit = defineEmits<{
+  statusChange: [taskId: number, newStatus: string]
+}>()
+
 const columns = [
   { key: 'todo', title: '待办' },
   { key: 'in_progress', title: '进行中' },
+  { key: 'review', title: '审核中' },
   { key: 'blocked', title: '阻塞' },
   { key: 'done', title: '完成' },
 ]
@@ -24,9 +27,8 @@ const handleDragStart = (task: TaskDTO) => {
 }
 
 const handleDrop = (status: string) => {
-  // Emit event to update task status
   if (draggedTask.value) {
-    console.log(`Moving task ${draggedTask.value.id} to ${status}`)
+    emit('statusChange', draggedTask.value.id, status)
     draggedTask.value = null
   }
 }
@@ -38,7 +40,7 @@ const handleDrop = (status: string) => {
       <div v-for="column in columns" :key="column.key" class="kanban-column">
         <div class="kanban-column-header">
           <h4>{{ column.title }}</h4>
-          <span class="kanban-column-count">{{ tasks[column.key]?.length || 0 }}</span>
+          <span class="kanban-column-count">{{ tasksByStatus[column.key]?.length || 0 }}</span>
         </div>
         <div
           class="kanban-column-body"
@@ -46,14 +48,14 @@ const handleDrop = (status: string) => {
           @drop="handleDrop(column.key)"
         >
           <div
-            v-for="task in tasks[column.key]"
+            v-for="task in tasksByStatus[column.key]"
             :key="task.id"
             draggable="true"
             @dragstart="handleDragStart(task)"
           >
             <KanbanCard :task="task" />
           </div>
-          <div v-if="!tasks[column.key]?.length" class="kanban-column-empty">
+          <div v-if="!tasksByStatus[column.key]?.length" class="kanban-column-empty">
             暂无任务
           </div>
         </div>

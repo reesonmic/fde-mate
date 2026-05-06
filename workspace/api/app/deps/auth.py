@@ -2,7 +2,7 @@
 Authentication Dependencies - async version.
 """
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy import select
@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config.settings import settings
 from app.models.user import User
 from app.deps.db import get_async_session
-from app.exceptions.biz import AuthException
+from app.exceptions.biz import AuthException, PermissionDeniedException
 
 security = HTTPBearer()
 
@@ -62,10 +62,7 @@ def require_role(*roles: str):
     """Dependency factory that requires a specific role."""
     async def _checker(user: UserContext = Depends(current_user)):
         if not set(roles) & set(user.roles):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Role(s) {roles} required",
-            )
+            raise PermissionDeniedException(f"Role(s) {roles} required")
         return user
     return _checker
 

@@ -16,17 +16,18 @@ export function setupAxiosInterceptors() {
   http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('access_token')
     if (token) config.headers.Authorization = `Bearer ${token}`
-    config.headers['X-Request-Id'] = crypto.randomUUID()
+    config.headers['X-Request-Id'] = crypto.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)
     return config
   })
 
   http.interceptors.response.use(
     (resp) => {
       const { code, data, message: msg } = resp.data
-      if (code !== 0 && code !== undefined) {
+      if (code !== undefined && code !== 0) {
         return Promise.reject({ code, message: msg })
       }
-      return data
+      // If API wraps response in {code, data}, unwrap it; otherwise return resp.data directly
+      return data !== undefined ? data : resp.data
     },
     async (err) => {
       const status = err.response?.status

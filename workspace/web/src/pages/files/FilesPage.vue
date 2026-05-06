@@ -10,11 +10,12 @@ import {
   SearchOutlined,
 } from '@ant-design/icons-vue'
 import { filesApi } from '@apis/modules/files'
+import type { FileMetaDTO, FileTreeNode } from '@apis/modules/files'
 
 const loading = ref(false)
-const fileList = ref<any[]>([])
-const treeData = ref<any[]>([])
-const quota = ref<any>(null)
+const fileList = ref<FileMetaDTO[]>([])
+const treeData = ref<FileTreeNode[]>([])
+const quota = ref<{ used_bytes: number; total_bytes: number; used_percent: number } | null>(null)
 const searchKeyword = ref('')
 const selectedRowKeys = ref<number[]>([])
 
@@ -52,7 +53,7 @@ const columns = [
     title: '文件名',
     dataIndex: 'file_name',
     key: 'file_name',
-    render: (text: string, record: any) => {
+    render: (text: string, record: FileMetaDTO) => {
       const icon = record.scope === 'project' ? FolderOutlined : FileOutlined
       return h('span', { class: 'file-name-cell' }, [
         h(icon, { style: { marginRight: '8px', color: '#1677ff' } }),
@@ -94,7 +95,7 @@ const columns = [
     title: '操作',
     key: 'action',
     width: 120,
-    render: (_: unknown, record: any) => h('div', { class: 'action-cell' }, [
+    render: (_: unknown, record: FileMetaDTO) => h('div', { class: 'action-cell' }, [
       h(DownloadOutlined, {
         style: { marginRight: '8px', cursor: 'pointer' },
         onClick: () => handleDownload(record),
@@ -127,7 +128,7 @@ const loadData = async () => {
   }
 }
 
-const handleDownload = async (file: any) => {
+const handleDownload = async (file: FileMetaDTO) => {
   try {
     const res = await filesApi.getDownloadUrl(file.id)
     window.open(res.url, '_blank')
@@ -158,7 +159,7 @@ const handleBatchDelete = async () => {
   }
 }
 
-const customUpload = async (options: any) => {
+const customUpload = async (options: { file: File; onSuccess?: (data: unknown) => void; onError?: (err: Error) => void }) => {
   const { file, onSuccess, onError } = options
   try {
     // Step 1: Get upload token
@@ -182,7 +183,7 @@ const customUpload = async (options: any) => {
     message.success(`${file.name} 上传成功`)
     onSuccess?.(null)
     await loadData()
-  } catch (e: any) {
+  } catch (e: unknown) {
     message.error(`${file.name} 上传失败`)
     onError?.(e)
   }
@@ -244,7 +245,7 @@ onMounted(async () => {
           :data-source="filteredFiles"
           :row-selection="{
             selectedRowKeys: selectedRowKeys,
-            onChange: (keys: any[]) => { selectedRowKeys = keys },
+            onChange: (keys: number[]) => { selectedRowKeys = keys },
           }"
           row-key="id"
           :pagination="{ pageSize: 20 }"

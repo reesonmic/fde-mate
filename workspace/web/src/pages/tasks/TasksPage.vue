@@ -6,6 +6,7 @@ import KanbanBoard from '@/components/business/KanbanBoard.vue'
 import TaskRow from '@/components/business/TaskRow.vue'
 import { useTasksStore } from '@/stores/tasks'
 import { tasksApi } from '@/apis/modules/tasks'
+import type { TaskDTO } from '@/types/business'
 import dayjs from 'dayjs'
 
 const tasksStore = useTasksStore()
@@ -22,8 +23,8 @@ const filters = reactive({
 const createForm = reactive({
   title: '',
   description: '',
-  priority: 'medium' as string,
-  deadline: undefined as any,
+  priority: 'p2' as string,
+  deadline: undefined as dayjs.Dayjs | undefined,
   project_id: undefined as number | undefined,
 })
 
@@ -55,20 +56,23 @@ const filteredTasks = computed(() => {
 const statusOptions = [
   { label: '待办', value: 'todo' },
   { label: '进行中', value: 'in_progress' },
+  { label: '审核中', value: 'review' },
   { label: '已阻塞', value: 'blocked' },
   { label: '已完成', value: 'done' },
 ]
 
 const priorityOptions = [
-  { label: '低', value: 'low' },
-  { label: '中', value: 'medium' },
-  { label: '高', value: 'high' },
+  { label: 'P0', value: 'p0' },
+  { label: 'P1', value: 'p1' },
+  { label: 'P2', value: 'p2' },
+  { label: 'P3', value: 'p3' },
 ]
 
 const statusColor = (status: string) => {
   const map: Record<string, string> = {
     todo: 'default',
     in_progress: 'processing',
+    review: 'cyan',
     blocked: 'error',
     done: 'success',
   }
@@ -79,6 +83,7 @@ const statusLabel = (status: string) => {
   const map: Record<string, string> = {
     todo: '待办',
     in_progress: '进行中',
+    review: '审核中',
     blocked: '已阻塞',
     done: '已完成',
   }
@@ -87,18 +92,20 @@ const statusLabel = (status: string) => {
 
 const priorityColor = (priority: string) => {
   const map: Record<string, string> = {
-    low: 'blue',
-    medium: 'orange',
-    high: 'red',
+    p0: 'red',
+    p1: 'orange',
+    p2: 'blue',
+    p3: 'default',
   }
   return map[priority] || 'default'
 }
 
 const priorityLabel = (priority: string) => {
   const map: Record<string, string> = {
-    low: '低',
-    medium: '中',
-    high: '高',
+    p0: 'P0',
+    p1: 'P1',
+    p2: 'P2',
+    p3: 'P3',
   }
   return map[priority] || priority
 }
@@ -107,6 +114,7 @@ const kanbanColumns = computed(() => {
   return [
     { key: 'todo', title: '待办' },
     { key: 'in_progress', title: '进行中' },
+    { key: 'review', title: '审核中' },
     { key: 'blocked', title: '已阻塞' },
     { key: 'done', title: '已完成' },
   ]
@@ -123,12 +131,12 @@ const handleCreateTask = async () => {
       title: createForm.title,
       description: createForm.description,
       priority: createForm.priority,
-      deadline: createForm.deadline?.toISOString?.() ?? createForm.deadline,
+      dueAt: createForm.deadline?.toISOString?.() ?? createForm.deadline,
       project_id: createForm.project_id,
     })
     message.success('创建成功')
     showCreateModal.value = false
-    Object.assign(createForm, { title: '', description: '', priority: 'medium', deadline: undefined, project_id: undefined })
+    Object.assign(createForm, { title: '', description: '', priority: 'p2', deadline: undefined, project_id: undefined })
     await tasksStore.loadTasks()
   } catch {
     message.error('创建失败')
@@ -137,7 +145,7 @@ const handleCreateTask = async () => {
   }
 }
 
-const handleDeleteTask = async (id: string) => {
+const handleDeleteTask = async (id: number) => {
   Modal.confirm({
     title: '确认删除',
     content: '确定要删除此任务吗？',
@@ -146,7 +154,7 @@ const handleDeleteTask = async (id: string) => {
     cancelText: '取消',
     onOk: async () => {
       try {
-        await tasksApi.delete(Number(id))
+        await tasksApi.delete(id)
         message.success('删除成功')
         await tasksStore.loadTasks()
       } catch {
@@ -156,9 +164,9 @@ const handleDeleteTask = async (id: string) => {
   })
 }
 
-const handleStatusChange = async (task: any, newStatus: string) => {
+const handleStatusChange = async (task: TaskDTO, newStatus: string) => {
   try {
-    await tasksApi.update(Number(task.id), { status: newStatus as any })
+    await tasksApi.update(Number(task.id), { status: newStatus })
     message.success('状态已更新')
     await tasksStore.loadTasks()
   } catch {
@@ -252,7 +260,7 @@ onMounted(async () => {
               :key="task.id"
               :task="task"
               @click="() => {}"
-              @delete="(id: string) => handleDeleteTask(id)"
+              @delete="(id: number) => handleDeleteTask(id)"
               @status-change="(newStatus: string) => handleStatusChange(task, newStatus)"
             />
             <div v-if="filteredTasks.length === 0" class="empty-text">
@@ -282,7 +290,6 @@ onMounted(async () => {
       <Tabs.TabPane key="kanban" tab="看板视图">
         <Spin :spinning="tasksStore.loading">
           <KanbanBoard
-            :columns="kanbanColumns"
             :tasks-by-status="tasksStore.kanbanData"
             @status-change="handleStatusChange"
           />
@@ -306,9 +313,10 @@ onMounted(async () => {
         </Form.Item>
         <Form.Item label="优先级">
           <Select v-model:value="createForm.priority">
-            <Select.Option value="low">低</Select.Option>
-            <Select.Option value="medium">中</Select.Option>
-            <Select.Option value="high">高</Select.Option>
+            <Select.Option value="p0">P0</Select.Option>
+            <Select.Option value="p1">P1</Select.Option>
+            <Select.Option value="p2">P2</Select.Option>
+            <Select.Option value="p3">P3</Select.Option>
           </Select>
         </Form.Item>
         <Form.Item label="截止日期">

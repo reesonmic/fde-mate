@@ -1,32 +1,11 @@
+# fde-mate 专属依赖（仅 Elasticsearch + Milvus）
+# MySQL 和 Redis 使用 infrastructure 共享实例
+
 version: '3.8'
 
+name: fde-mate
+
 services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: fde_workbench
-      MYSQL_CHARSET: utf8mb4
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   elasticsearch:
     image: elasticsearch:8.12.0
     environment:
@@ -60,6 +39,5 @@ services:
       retries: 5
 
 volumes:
-  mysql_data:
   es_data:
   milvus_data:

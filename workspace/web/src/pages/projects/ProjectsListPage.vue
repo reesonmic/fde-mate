@@ -5,49 +5,50 @@ import { PlusOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { projectsApi } from '@/apis/modules/projects'
+import type { ProjectDTO } from '@/types/business'
 
 const router = useRouter()
 const projectsStore = useProjectsStore()
 const showCreateModal = ref(false)
 const createLoading = ref(false)
 const searchKeyword = ref('')
-const statusFilter = ref<string[]>([])
+const phaseFilter = ref<string[]>([])
 
 const createForm = reactive({
   name: '',
-  description: '',
-  start_date: undefined as any,
-  end_date: undefined as any,
 })
 
-const statusOptions = [
-  { label: '进行中', value: 'active' },
-  { label: '已完成', value: 'completed' },
-  { label: '已暂停', value: 'paused' },
-  { label: '已归档', value: 'archived' },
+const phaseOptions = [
+  { label: '初始化', value: 'init' },
+  { label: '探索', value: 'discovery' },
+  { label: '交付', value: 'delivery' },
+  { label: '审核', value: 'review' },
+  { label: '关闭', value: 'closed' },
 ]
 
-const statusColor = (status: string) => {
+const phaseColor = (phase: string) => {
   const map: Record<string, string> = {
-    active: 'processing',
-    completed: 'success',
-    paused: 'warning',
-    archived: 'default',
+    init: 'default',
+    discovery: 'processing',
+    delivery: 'blue',
+    review: 'cyan',
+    closed: 'default',
   }
-  return map[status] || 'default'
+  return map[phase] || 'default'
 }
 
-const statusLabel = (status: string) => {
+const phaseLabel = (phase: string) => {
   const map: Record<string, string> = {
-    active: '进行中',
-    completed: '已完成',
-    paused: '已暂停',
-    archived: '已归档',
+    init: '初始化',
+    discovery: '探索',
+    delivery: '交付',
+    review: '审核',
+    closed: '关闭',
   }
-  return map[status] || status
+  return map[phase] || phase
 }
 
-const filteredProjects = ref<any[]>([])
+const filteredProjects = ref<ProjectDTO[]>([])
 
 const loadData = async () => {
   await projectsStore.loadProjects({})
@@ -59,11 +60,11 @@ const handleSearch = () => {
 
   if (searchKeyword.value) {
     const kw = searchKeyword.value.toLowerCase()
-    items = items.filter((p) => p.name.toLowerCase().includes(kw) || p.description?.toLowerCase().includes(kw))
+    items = items.filter((p) => p.name.toLowerCase().includes(kw) || p.owner_name?.toLowerCase().includes(kw))
   }
 
-  if (statusFilter.value.length > 0) {
-    items = items.filter((p) => statusFilter.value.includes(p.status))
+  if (phaseFilter.value.length > 0) {
+    items = items.filter((p) => phaseFilter.value.includes(p.phase))
   }
 
   filteredProjects.value = items
@@ -82,7 +83,7 @@ const handleCreate = async () => {
     })
     message.success('创建成功')
     showCreateModal.value = false
-    Object.assign(createForm, { name: '', description: '', start_date: undefined, end_date: undefined })
+    Object.assign(createForm, { name: '' })
     await loadData()
   } catch {
     message.error('创建失败')
@@ -138,14 +139,14 @@ onMounted(async () => {
       </Input>
 
       <Select
-        v-model:value="statusFilter"
+        v-model:value="phaseFilter"
         mode="multiple"
-        placeholder="状态筛选"
+        placeholder="阶段筛选"
         class="filter-select"
         allow-clear
         @change="handleSearch"
       >
-        <Select.Option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
+        <Select.Option v-for="opt in phaseOptions" :key="opt.value" :value="opt.value">
           {{ opt.label }}
         </Select.Option>
       </Select>
@@ -168,7 +169,7 @@ onMounted(async () => {
             <template #title>
               <div class="project-title">
                 <span class="project-name">{{ project.name }}</span>
-                <Tag :color="statusColor(project.status)">{{ statusLabel(project.status) }}</Tag>
+                <Tag :color="phaseColor(project.phase)">{{ phaseLabel(project.phase) }}</Tag>
               </div>
             </template>
             <template #extra>
@@ -176,18 +177,20 @@ onMounted(async () => {
                 type="text"
                 danger
                 size="small"
-                @click="handleDelete(Number(project.id), $event)"
+                @click="handleDelete(project.id, $event)"
               >
                 删除
               </Button>
             </template>
-            <p class="project-desc">{{ project.description || '暂无描述' }}</p>
-            <div class="project-meta">
-              <span class="progress-text">进度 {{ project.progress ?? 0 }}%</span>
-              <span class="date-text">{{ project.created_at?.substring(0, 10) ?? '' }}</span>
+            <p class="project-meta">负责人: {{ project.owner_name || '-' }}</p>
+            <div class="project-health">
+              <span>健康度</span>
+              <span :class="project.health >= 80 ? 'health-good' : project.health >= 60 ? 'health-warning' : 'health-bad'">
+                {{ project.health }}%
+              </span>
             </div>
             <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: `${project.progress ?? 0}%` }"></div>
+              <div class="progress-fill" :style="{ width: `${project.health}%` }"></div>
             </div>
           </Card>
         </Col>
@@ -287,11 +290,21 @@ onMounted(async () => {
 }
 
 .project-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary, #666);
+}
+
+.project-health {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
+  margin-top: 8px;
   color: var(--color-text-secondary, #666);
 }
+
+.health-good { color: #52c41a; }
+.health-warning { color: #faad14; }
+.health-bad { color: #ff4d4f; }
 
 .progress-bar {
   height: 4px;

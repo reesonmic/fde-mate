@@ -1,10 +1,12 @@
 """
 Application Settings using pydantic-settings
 """
+import secrets
 from functools import lru_cache
 from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -36,7 +38,7 @@ class Settings(BaseSettings):
     ai_orchestrator_timeout: int = 120
 
     # Auth
-    jwt_secret_key: str = "change-this-secret-key"
+    jwt_secret_key: str = ""
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
 
@@ -57,6 +59,17 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     log_format: str = "json"
+
+    @field_validator("jwt_secret_key", mode="after")
+    @classmethod
+    def validate_jwt_secret(cls, v: str) -> str:
+        if not v or len(v) < 16:
+            raise ValueError(
+                "JWT_SECRET_KEY must be at least 16 characters. "
+                "Set it via environment variable or .env file. "
+                f"Example: JWT_SECRET_KEY={secrets.token_hex(32)}"
+            )
+        return v
 
 
 @lru_cache

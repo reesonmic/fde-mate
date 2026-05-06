@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Form, Input, Switch, Select } from 'ant-design-vue'
+import { reactive } from 'vue'
+import { Form, Input, Switch, Select, message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -7,20 +8,16 @@ const userStore = useUserStore()
 const formState = reactive({
   language: userStore.preferences.language,
   theme: userStore.settings.theme,
-  notifications: userStore.preferences.notifications,
+  notifications: { ...userStore.preferences.notifications },
 })
 
 const handleSave = () => {
-  userStore.updatePreferences(formState)
+  userStore.updatePreferences({
+    language: formState.language,
+    notifications: formState.notifications,
+  })
+  userStore.updateSettings({ theme: formState.theme })
   message.success('设置已保存')
-}
-</script>
-
-<script lang="ts">
-import { reactive } from 'vue'
-import { message } from 'ant-design-vue'
-export default {
-  name: 'SettingsPage',
 }
 </script>
 
@@ -53,6 +50,10 @@ export default {
 
       <Form.Item label="推送通知">
         <Switch v-model:checked="formState.notifications.push" />
+      </Form.Item>
+
+      <Form.Item :wrapper-col="{ offset: 4 }">
+        <Switch type="primary" @click="handleSave">保存设置</Switch>
       </Form.Item>
     </Form>
   </div>

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from fastapi import Depends
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy import select
 
 from app.config.settings import settings
@@ -13,8 +13,6 @@ from app.deps.db import get_async_session
 from app.exceptions.biz import AuthException, TokenInvalidException
 from app.models.user import User
 from app.schemas.auth import LoginRequest, TokenPair, UserInfo
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class AuthService:
@@ -31,7 +29,7 @@ class AuthService:
                 select(User).where(User.name == req.username, User.is_deleted == 0)
             )
             user = result2.scalar_one_or_none()
-        if not user or not pwd_context.verify(req.password, user.password_hash):
+        if not user or not bcrypt.checkpw(req.password.get_secret_value().encode(), user.password_hash.encode()):
             raise AuthException("用户名或密码错误")
         return await self._create_token_pair(user)
 
@@ -73,7 +71,7 @@ class AuthService:
         )
 
     def hash_password(self, password: str) -> str:
-        return pwd_context.hash(password)
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
     async def _create_token_pair(self, user: User) -> TokenPair:
         now = datetime.utcnow()

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { MentionSearchResult } from '@/types/api'
+import type { TaskDTO, ProjectDTO, CustomerDTO, FileDTO, UserDTO } from '@/types/business'
+
+type MentionedItem = (TaskDTO | ProjectDTO | CustomerDTO | FileDTO | UserDTO) & { type: string }
 
 interface Props {
   results: MentionSearchResult
@@ -8,7 +11,7 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  select: [item: any]
+  select: [item: MentionedItem]
   close: []
 }>()
 
@@ -30,7 +33,7 @@ const typeIcons: Record<string, string> = {
   user: '👤',
 }
 
-const handleSelect = (item: any) => {
+const handleSelect = (item: MentionedItem) => {
   emit('select', item)
 }
 </script>

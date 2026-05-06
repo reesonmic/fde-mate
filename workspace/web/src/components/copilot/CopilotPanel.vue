@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Tabs, Input, Button } from 'ant-design-vue'
+import { Tabs, Button } from 'ant-design-vue'
 import MessageList from './MessageList.vue'
 import ChatInput from './ChatInput.vue'
 import { useCopilotStore } from '@/stores/copilot'
-import { ASSISTANT_CONFIG } from '@/config/assistants'
+import type { TaskDTO, ProjectDTO, CustomerDTO, FileDTO, UserDTO } from '@/types/business'
+
+type MentionItem = TaskDTO | ProjectDTO | CustomerDTO | FileDTO | UserDTO
 
 const copilotStore = useCopilotStore()
 const activeTab = ref('task')
@@ -20,7 +22,7 @@ const currentMessages = computed(() => {
   return copilotStore.getMessages(activeTab.value)
 })
 
-const handleSend = (content: string, mentions?: any[]) => {
+const handleSend = (content: string, mentions?: MentionItem[]) => {
   copilotStore.sendMessage(activeTab.value, content, mentions)
 }
 

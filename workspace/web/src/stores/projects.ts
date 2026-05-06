@@ -1,18 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ProjectDTO } from '@/types/business'
+import type { ProjectDTO, ProjectMemberDTO, ProjectMilestoneDTO } from '@/types/business'
 import { projectsApi } from '@/apis/modules/projects'
 
 export const useProjectsStore = defineStore('projects', () => {
   const projects = ref<ProjectDTO[]>([])
   const currentProject = ref<ProjectDTO | null>(null)
-  const members = ref<any[]>([])
-  const milestones = ref<any[]>([])
+  const members = ref<ProjectMemberDTO[]>([])
+  const milestones = ref<ProjectMilestoneDTO[]>([])
   const loading = ref(false)
   const error = ref<Error | null>(null)
 
   const activeProjects = computed(() =>
-    projects.value.filter((p) => p.status === 'active')
+    projects.value.filter((p) => p.phase === 'delivery' || p.phase === 'discovery')
   )
 
   const loadProjects = async (params?: Record<string, unknown>) => {
@@ -51,7 +51,7 @@ export const useProjectsStore = defineStore('projects', () => {
     // Use the project detail which includes milestones
     try {
       const project = await projectsApi.get(projectId)
-      milestones.value = (project as any).milestones || []
+      milestones.value = (project as { milestones?: ProjectMilestoneDTO[] }).milestones || []
     } catch (err) {
       error.value = err as Error
     }
@@ -65,7 +65,7 @@ export const useProjectsStore = defineStore('projects', () => {
 
   const updateProject = async (id: number, data: Record<string, unknown>) => {
     const project = await projectsApi.update(id, data)
-    const index = projects.value.findIndex((p) => Number(p.id) === id)
+    const index = projects.value.findIndex((p) => p.id === id)
     if (index !== -1) {
       projects.value[index] = project
     }
@@ -77,7 +77,7 @@ export const useProjectsStore = defineStore('projects', () => {
 
   const deleteProject = async (id: number) => {
     await projectsApi.delete(id)
-    projects.value = projects.value.filter((p) => Number(p.id) !== id)
+    projects.value = projects.value.filter((p) => p.id !== id)
     if (currentProject.value?.id === id) {
       currentProject.value = null
     }

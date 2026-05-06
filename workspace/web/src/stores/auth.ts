@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@apis/modules/auth'
+import type { UserInfo } from '@types/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'))
   const refreshToken = ref<string | null>(localStorage.getItem('refresh_token'))
-  const user = ref<any>(null)
+  const user = ref<UserInfo | null>(null)
 
   const isAuthenticated = computed(() => !!token.value)
   const isLoggedIn = computed(() => !!token.value)
@@ -49,7 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
     setToken,
     login,
     refresh,
-    setUser: (userData: any) => { user.value = userData },
+    setUser: (userData: UserInfo) => { user.value = userData },
     logout,
   }
 })

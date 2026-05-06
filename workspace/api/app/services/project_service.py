@@ -41,15 +41,17 @@ class ProjectService:
         return self._to_dto(project)
 
     async def create_project(self, payload: ProjectCreate, user_id: int) -> ProjectDTO:
-        project = await self.repo.create(
-            name=payload.name,
-            customer_id=payload.customer_id,
-            phase=payload.phase.value,
-            owner_id=payload.owner_id,
-            start_at=payload.start_at,
-            end_at=payload.end_at,
-        )
-        await self.repo.add_member(project.id, payload.owner_id, "owner")
+        async with self.session.begin_nested():
+            project = await self.repo.create(
+                name=payload.name,
+                customer_id=payload.customer_id,
+                phase=payload.phase.value,
+                owner_id=payload.owner_id,
+                start_at=payload.start_at,
+                end_at=payload.end_at,
+            )
+            await self.repo.add_member(project.id, payload.owner_id, "owner")
+            await self.session.flush()
         full = await self.repo.get_with_relations(project.id)
         return self._to_dto(full)
 

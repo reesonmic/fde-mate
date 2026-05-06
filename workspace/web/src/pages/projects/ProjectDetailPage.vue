@@ -1,22 +1,24 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, h } from 'vue'
 import { Tabs, Card, Table, Button, Tag, Descriptions, Form, Input, Modal, DatePicker, message, Spin, Statistic, Row, Col, Progress, Timeline, Select } from 'ant-design-vue'
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { projectsApi } from '@/apis/modules/projects'
+import type { ProjectDTO, ProjectMemberDTO, ProjectMilestoneDTO, WeeklyReportDTO } from '@/types/business'
+import dayjs from 'dayjs'
 
 const route = useRoute()
 const router = useRouter()
 const projectsStore = useProjectsStore()
 const activeTab = ref('overview')
 const loading = ref(false)
-const project = ref<any>(null)
-const health = ref<any>(null)
-const members = ref<any[]>([])
-const milestones = ref<any[]>([])
-const risks = ref<any[]>([])
-const weeklyReports = ref<any[]>([])
+const project = ref<ProjectDTO | null>(null)
+const health = ref<{ health: number; risk_count: number; overdue_milestones: number } | null>(null)
+const members = ref<ProjectMemberDTO[]>([])
+const milestones = ref<ProjectMilestoneDTO[]>([])
+const risks = ref<Array<{ id: number; title: string; level: string; mitigation: string; status: string }>>([])
+const weeklyReports = ref<WeeklyReportDTO[]>([])
 
 // Add member
 const showAddMember = ref(false)
@@ -30,7 +32,7 @@ const showAddMilestone = ref(false)
 const addMilestoneForm = reactive({
   name: '',
   description: '',
-  deadline: undefined as any,
+  deadline: undefined as dayjs.Dayjs | undefined,
 })
 
 // Add risk
@@ -87,23 +89,6 @@ const riskLevelLabel = (level: string) => {
   return map[level] || level
 }
 
-const milestoneStatusColor = (status: string) => {
-  const map: Record<string, string> = {
-    pending: 'default',
-    in_progress: 'processing',
-    completed: 'success',
-  }
-  return map[status] || 'default'
-}
-
-const milestoneStatusLabel = (status: string) => {
-  const map: Record<string, string> = {
-    pending: '未开始',
-    in_progress: '进行中',
-    completed: '已完成',
-  }
-  return map[status] || status
-}
 
 const loadData = async () => {
   loading.value = true
@@ -113,15 +98,15 @@ const loadData = async () => {
       projectsApi.get(id),
       projectsApi.getHealth(id),
       projectsApi.getMembers(id),
-      projectsApi.list ? Promise.resolve([]) : Promise.resolve([]),
+      projectsApi.listRisks?.(id) || Promise.resolve([]),
       projectsApi.weeklyReports(id),
     ])
     project.value = proj
     health.value = healthRes
     members.value = membersRes
-    risks.value = (proj as any).risks || []
+    risks.value = (proj as { risks?: typeof risks.value }).risks || []
     weeklyReports.value = reportsRes
-    milestones.value = (proj as any).milestones || []
+    milestones.value = (proj as { milestones?: typeof milestones.value }).milestones || []
   } catch (e) {
     console.error('Failed to load project data', e)
   } finally {
@@ -188,28 +173,26 @@ const handleAddRisk = async () => {
 
 const memberColumns = [
   { title: '用户ID', dataIndex: 'user_id', key: 'user_id' },
+  { title: '用户名', dataIndex: 'user_name', key: 'user_name' },
   { title: '角色', dataIndex: 'role', key: 'role' },
-  { title: '加入时间', dataIndex: 'joined_at', key: 'joined_at' },
   {
     title: '操作',
     key: 'action',
-    render: (_: unknown, record: any) => (
-      <Button type="link" danger size="small" onClick={() => handleRemoveMember(record.user_id)}>
-        移除
-      </Button>
-    ),
+    render: (_: unknown, record: ProjectMemberDTO) =>
+      h(Button, { type: 'link', danger: true, size: 'small', onClick: () => handleRemoveMember(record.user_id) }, () => '移除'),
   },
 ]
 
 const milestoneColumns = [
-  { title: '名称', dataIndex: 'name', key: 'name' },
+  { title: '名称', dataIndex: 'title', key: 'title' },
   {
     title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    render: (s: string) => <Tag color={milestoneStatusColor(s)}>{milestoneStatusLabel(s)}</Tag>,
+    dataIndex: 'done',
+    key: 'done',
+    render: (done: boolean) =>
+      h(Tag, { color: done ? 'success' : 'default' }, () => done ? '已完成' : '未完成'),
   },
-  { title: '截止日期', dataIndex: 'deadline', key: 'deadline' },
+  { title: '截止日期', dataIndex: 'dueAt', key: 'dueAt' },
 ]
 
 const riskColumns = [
@@ -218,7 +201,8 @@ const riskColumns = [
     title: '等级',
     dataIndex: 'level',
     key: 'level',
-    render: (l: string) => <Tag color={riskLevelColor(l)}>{riskLevelLabel(l)}</Tag>,
+    render: (l: string) =>
+      h(Tag, { color: riskLevelColor(l) }, () => riskLevelLabel(l)),
   },
   { title: '描述', dataIndex: 'description', key: 'description' },
   { title: '创建时间', dataIndex: 'created_at', key: 'created_at' },
@@ -240,7 +224,7 @@ onMounted(async () => {
         </Button>
         <div class="project-title-area">
           <h2>{{ project?.name || '项目详情' }}</h2>
-          <p>{{ project?.description }}</p>
+          <p>阶段: {{ project?.phase }} | 负责人: {{ project?.owner_name || '-' }}</p>
         </div>
         <div class="health-badge" v-if="health">
           <Statistic
@@ -260,16 +244,16 @@ onMounted(async () => {
             <Col :span="16">
               <Card title="项目信息" :bordered="false">
                 <Descriptions :column="2">
-                  <Descriptions.Item label="状态">
-                    <Tag>{{ project?.status }}</Tag>
+                  <Descriptions.Item label="阶段">
+                    <Tag>{{ project?.phase }}</Tag>
                   </Descriptions.Item>
-                  <Descriptions.Item label="进度">
-                    <Progress :percent="project?.progress ?? 0" />
+                  <Descriptions.Item label="健康度">
+                    {{ project?.health }}%
                   </Descriptions.Item>
-                  <Descriptions.Item label="开始日期">{{ project?.start_date || '-' }}</Descriptions.Item>
-                  <Descriptions.Item label="结束日期">{{ project?.end_date || '-' }}</Descriptions.Item>
-                  <Descriptions.Item label="创建时间">{{ project?.created_at || '-' }}</Descriptions.Item>
-                  <Descriptions.Item label="更新时间">{{ project?.updated_at || '-' }}</Descriptions.Item>
+                  <Descriptions.Item label="开始日期">{{ project?.start_at?.substring(0, 10) || '-' }}</Descriptions.Item>
+                  <Descriptions.Item label="结束日期">{{ project?.end_at?.substring(0, 10) || '-' }}</Descriptions.Item>
+                  <Descriptions.Item label="创建时间">{{ project?.gmtCreate?.substring(0, 19) || '-' }}</Descriptions.Item>
+                  <Descriptions.Item label="更新时间">{{ project?.gmtModified?.substring(0, 19) || '-' }}</Descriptions.Item>
                 </Descriptions>
               </Card>
             </Col>
@@ -351,8 +335,8 @@ onMounted(async () => {
             <Timeline>
               <Timeline.Item v-for="report in weeklyReports" :key="report.id">
                 <div class="report-item">
-                  <h4>{{ report.title || '周报' }}</h4>
-                  <p>{{ report.content || report.created_at }}</p>
+                  <h4>周报 {{ report.week_start?.substring(0, 10) }} ~ {{ report.week_end?.substring(0, 10) }}</h4>
+                  <p>{{ report.content }}</p>
                 </div>
               </Timeline.Item>
             </Timeline>

@@ -2,69 +2,78 @@
  * SSE Client for streaming AI responses
  */
 
-interface SSEOptions {
-  onMessage: (data: string) => void
+interface OpenSseOptions {
+  url: string
+  body?: Record<string, unknown>
+  onMessage: (data: unknown) => void
+  onDone?: () => void
   onError?: (error: Error) => void
-  onComplete?: () => void
 }
 
-interface SSEMessageEvent {
-  data: string
-}
+/**
+ * POST-based SSE client using fetch + ReadableStream.
+ * Required because EventSource only supports GET requests.
+ * Uses Authorization header (not URL params) for secure authentication.
+ */
+export function openSse(options: OpenSseOptions): AbortController {
+  const { url, body, onMessage, onDone, onError } = options
+  const controller = new AbortController()
 
-export class SSEClient {
-  private eventSource: EventSource | null = null
-  private url: string
+  const token = localStorage.getItem('access_token')
 
-  constructor(url: string) {
-    this.url = url
-  }
-
-  connect(options: SSEOptions): void {
-    const authStore = useAuthStore()
-    const headers: Record<string, string> = {}
-
-    if (authStore.token) {
-      headers['Authorization'] = `Bearer ${authStore.token}`
-    }
-
-    // EventSource doesn't support custom headers, so we use URL params for auth
-    const urlWithAuth = authStore.token
-      ? `${this.url}?token=${encodeURIComponent(authStore.token)}`
-      : this.url
-
-    this.eventSource = new EventSource(urlWithAuth)
-
-    this.eventSource.onmessage = (event: SSEMessageEvent) => {
-      if (event.data === '[DONE]') {
-        this.disconnect()
-        options.onComplete?.()
-        return
+  fetch(`/api/v1${url}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    signal: controller.signal,
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`SSE error: ${response.status} ${response.statusText}`)
       }
-      options.onMessage(event.data)
-    }
+      if (!response.body) {
+        throw new Error('SSE error: no response body')
+      }
 
-    this.eventSource.onerror = (error: Event) => {
-      this.disconnect()
-      options.onError?.(new Error('SSE connection error'))
-    }
-  }
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
 
-  disconnect(): void {
-    if (this.eventSource) {
-      this.eventSource.close()
-      this.eventSource = null
-    }
-  }
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-  isConnected(): boolean {
-    return this.eventSource !== null && this.eventSource.readyState === EventSource.OPEN
-  }
-}
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
 
-// Import at the top level due to module resolution
-import { useAuthStore } from '@/stores/auth'
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed || !trimmed.startsWith('data: ')) continue
 
-export function createSSEClient(url: string): SSEClient {
-  return new SSEClient(url)
+          const data = trimmed.slice(6)
+          if (data === '[DONE]') {
+            onDone?.()
+            return
+          }
+
+          try {
+            onMessage(JSON.parse(data))
+          } catch {
+            onMessage(data)
+          }
+        }
+      }
+      onDone?.()
+    })
+    .catch((err: Error) => {
+      if (err.name !== 'AbortError') {
+        onError?.(err)
+      }
+    })
+
+  return controller
 }

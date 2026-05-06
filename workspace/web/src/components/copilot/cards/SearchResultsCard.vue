@@ -6,7 +6,7 @@ interface Props {
     name: string
     score: number
     snippet: string
-    metadata?: any
+    metadata?: Record<string, unknown>
   }>
 }
 

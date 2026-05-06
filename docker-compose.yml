@@ -1,0 +1,45 @@
+version: '3.8'
+
+name: fde-mate
+
+services:
+  api:
+    build:
+      context: ./workspace/api
+      dockerfile: Dockerfile
+    image: fde-mate-api:latest
+    container_name: fde-mate-api
+    environment:
+      - DATABASE_URL=mysql+pymysql://fde_user:Fde%402026work@shared-mysql:3306/fde_workbench
+      - REDIS_URL=redis://shared-redis:6379/0
+      - JWT_SECRET_KEY=fde-mate-jwt-secret-key-2026-secure-32chars
+    networks:
+      - products-shared
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  web:
+    build:
+      context: ./workspace/web
+      dockerfile: Dockerfile
+    image: fde-mate-web:latest
+    container_name: fde-mate-web
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - products-shared
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  products-shared:
+    external: true

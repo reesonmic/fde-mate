@@ -6,7 +6,7 @@ export interface CopilotMessage {
   role: 'user' | 'assistant'
   timestamp: string
   type?: 'text' | 'action' | 'report' | 'nextSteps' | 'searchResults'
-  metadata?: any
+  metadata?: Record<string, unknown>
 }
 
 export interface CopilotSession {
@@ -20,7 +20,7 @@ export interface CopilotSession {
 export interface CopilotAction {
   actionId: string
   toolName: string
-  params: any
+  params: Record<string, unknown>
   preview: string
   expiresAt: string
 }

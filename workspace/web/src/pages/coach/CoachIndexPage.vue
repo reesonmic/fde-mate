@@ -7,7 +7,15 @@ import { coachApi } from '@apis/modules/coach'
 
 const router = useRouter()
 const loading = ref(false)
-const recommendations = ref<any>(null)
+import type { BestPracticeDTO, SopDTO, LearningPathDTO } from '@/types/business'
+
+interface RecommendationsDTO {
+  practices?: BestPracticeDTO[]
+  sops?: SopDTO[]
+  paths?: LearningPathDTO[]
+}
+
+const recommendations = ref<RecommendationsDTO | null>(null)
 
 const sections = [
   { key: 'practices', title: '最佳实践', icon: BookOutlined, route: '/coach/best-practices', desc: '实战案例库' },

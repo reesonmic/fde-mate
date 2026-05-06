@@ -4,18 +4,30 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-fde2026dev}
       MYSQL_DATABASE: fde_workbench
       MYSQL_CHARSET: utf8mb4
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   elasticsearch:
     image: elasticsearch:8.12.0
@@ -25,6 +37,31 @@ services:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  milvus:
+    image: milvusdb/milvus:v2.3.0
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_USE_EMBED: "true"
+      ETCD_DATA_DIR: /var/lib/milvus/etcd
+    ports:
+      - "19530:19530"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   api:
     build:
@@ -33,15 +70,27 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DATABASE_URL: mysql+aiomysql://root:root@mysql:3306/fde_workbench?charset=utf8mb4
+      DATABASE_URL: mysql+aiomysql://root:fde2026dev@mysql:3306/fde_workbench
       REDIS_URL: redis://redis:6379/0
       ES_URL: http://elasticsearch:9200
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
       AI_ORCHESTRATOR_URL: http://ai-orchestrator:8090
-      JWT_SECRET_KEY: dev-secret-key
+      JWT_SECRET_KEY: fde-workbench-dev-jwt-secret-key-2026
+      LLM_PROVIDER: mock
     depends_on:
-      - mysql
-      - redis
-      - elasticsearch
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   ai-orchestrator:
     build:
@@ -51,8 +100,20 @@ services:
       - "8090:8090"
     environment:
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      API_BASE_URL: http://api:8080
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
+      ES_HOST: elasticsearch
+      ES_PORT: 9200
     depends_on:
       - api
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8090/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   web:
     build:
@@ -62,6 +123,9 @@ services:
       - "5173:80"
     depends_on:
       - api
+    restart: unless-stopped
 
 volumes:
   mysql_data:
+  es_data:
+  milvus_data:

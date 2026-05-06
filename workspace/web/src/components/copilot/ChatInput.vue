@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { Input, Button } from 'ant-design-vue'
 import MentionPicker from './MentionPicker.vue'
 import { useMention } from '@/composables/useMention'
+import type { TaskDTO, ProjectDTO, CustomerDTO, FileDTO, UserDTO } from '@/types/business'
 
-interface Props {
-  assistantType: string
-}
+type MentionItem = TaskDTO | ProjectDTO | CustomerDTO | FileDTO | UserDTO
 
-const props = defineProps<Props>()
 const emit = defineEmits<{
-  send: [content: string, mentions: any[]]
+  send: [content: string, mentions: MentionItem[]]
 }>()
 
 const inputValue = ref('')
@@ -42,7 +40,7 @@ const handleInput = (e: InputEvent) => {
   inputValue.value = value
 }
 
-const handleSelectMention = (item: any) => {
+const handleSelectMention = (item: MentionItem) => {
   // Replace @query with @name
   const atIndex = inputValue.value.lastIndexOf('@')
   inputValue.value = inputValue.value.slice(0, atIndex) + `@${item.name} `

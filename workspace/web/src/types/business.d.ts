@@ -1,7 +1,7 @@
 // Business Entity Types
 
 export interface UserDTO {
-  id: string
+  id: number
   name: string
   email: string
   avatar?: string
@@ -10,92 +10,130 @@ export interface UserDTO {
 }
 
 export interface TaskDTO {
-  id: string
+  id: number
   title: string
   description?: string
-  status: 'todo' | 'in_progress' | 'blocked' | 'done'
-  priority: 'low' | 'medium' | 'high'
-  assignee?: UserDTO
-  projectId?: string
-  deadline?: string
-  createdAt: string
-  updatedAt: string
+  status: 'todo' | 'in_progress' | 'review' | 'done' | 'blocked'
+  priority: 'p0' | 'p1' | 'p2' | 'p3'
+  assignee_id?: number
+  projectId?: number
+  dueAt?: string
+  tags?: string[]
+  creator_id?: number
+  gmtCreate: string
+  gmtModified: string
 }
 
 export interface ProjectDTO {
-  id: string
+  id: number
   name: string
-  description?: string
-  status: 'active' | 'completed' | 'paused' | 'archived'
-  progress: number
-  startDate?: string
-  endDate?: string
-  createdAt: string
-  updatedAt: string
+  customer_id?: number
+  phase: 'init' | 'discovery' | 'delivery' | 'review' | 'closed'
+  health: number
+  owner_id: number
+  owner_name?: string
+  start_at: string
+  end_at?: string
+  members: ProjectMemberDTO[]
+  milestones: ProjectMilestoneDTO[]
+  risks: RiskDTO[]
+  gmtCreate: string
+  gmtModified: string
 }
 
 export interface ProjectMemberDTO {
-  userId: string
-  userName: string
+  id: number
+  user_id: number
+  user_name: string
   role: string
-  joinedAt: string
 }
 
 export interface ProjectMilestoneDTO {
-  id: string
-  name: string
-  status: 'pending' | 'in_progress' | 'completed'
-  deadline?: string
-  description?: string
+  id: number
+  title: string
+  dueAt: string
+  done: boolean
+}
+
+export interface RiskDTO {
+  id: number
+  title: string
+  level: 'low' | 'medium' | 'high'
+  mitigation?: string
+  status: string
 }
 
 export interface CustomerDTO {
-  id: string
+  id: number
   name: string
-  description?: string
-  healthScore?: number
-  status: 'active' | 'inactive' | 'churned'
-  createdAt: string
-  updatedAt: string
+  industry?: string
+  scale?: string
+  owner_id?: number
+  contacts: ContactDTO[]
+  opportunities: OpportunityDTO[]
+  gmtCreate: string
+  gmtModified: string
+}
+
+export interface ContactDTO {
+  id: number
+  customer_id: number
+  name: string
+  title?: string
+  phone?: string
+  email?: string
+  gmtCreate: string
+}
+
+export interface OpportunityDTO {
+  id: number
+  customer_id: number
+  title: string
+  stage: string
+  amount?: number
+  close_at?: string
+  gmtCreate: string
 }
 
 export interface FileDTO {
-  id: string
+  id: number
   name: string
-  type: string
+  ext: string
   size: number
-  customerId?: string
-  projectId?: string
-  path: string
-  thumbnail?: string
-  createdAt: string
-  updatedAt: string
+  scope: string
+  scope_id?: number
+  owner_id: number
+  oss_key: string
+  rag_indexed: number
+  gmtCreate: string
+  gmtModified: string
 }
 
 export interface BestPracticeDTO {
-  id: string
+  id: number
   title: string
   summary: string
   content: string
   category?: string
   author?: string
   tags?: string[]
-  createdAt: string
-  updatedAt: string
+  gmtCreate: string
+  gmtModified: string
 }
 
 export interface SopDTO {
-  id: string
+  id: number
   title: string
   description: string
   content: string
   status: 'active' | 'draft' | 'archived'
   version: number
-  updatedAt: string
+  gmtCreate: string
+  gmtModified: string
 }
 
 export interface LearningPathDTO {
-  id: string
+  id: number
   name: string
   description?: string
   steps: Array<{
@@ -105,4 +143,14 @@ export interface LearningPathDTO {
     resourceId?: string
   }>
   currentStep?: number
+}
+
+export interface WeeklyReportDTO {
+  id: number
+  project_id: number
+  week_start: string
+  week_end: string
+  content: string
+  created_by: number
+  gmtCreate: string
 }

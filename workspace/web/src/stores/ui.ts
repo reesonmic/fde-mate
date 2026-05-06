@@ -15,7 +15,15 @@ export const useUiStore = defineStore('ui', () => {
   const globalLoading = ref(false)
 
   // Notifications
-  const notifications = ref<any[]>([])
+  interface UINotification {
+    id: number
+    title: string
+    message?: string
+    type?: 'info' | 'success' | 'warning' | 'error'
+    timestamp?: number
+  }
+
+  const notifications = ref<UINotification[]>([])
 
   const setTheme = (newTheme: 'light' | 'dark') => {
     theme.value = newTheme
@@ -41,7 +49,7 @@ export const useUiStore = defineStore('ui', () => {
     globalLoading.value = loading
   }
 
-  const addNotification = (notification: any) => {
+  const addNotification = (notification: Partial<UINotification> & { title: string }) => {
     notifications.value.push({
       id: Date.now(),
       ...notification,

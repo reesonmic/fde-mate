@@ -17,7 +17,12 @@ const handleSubmit = async () => {
     await auth.login(formState.value.username, formState.value.password)
     message.success('登录成功')
     const redirect = (route.query.redirect as string) || '/dashboard'
-    router.push(redirect)
+    // Only allow internal paths starting with /, reject external URLs, javascript:, and data: URIs
+    if (redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.match(/^(javascript|data|vbscript):/i)) {
+      router.push(redirect)
+    } else {
+      router.push('/dashboard')
+    }
   } catch {
     message.error('登录失败，请检查用户名和密码')
   } finally {

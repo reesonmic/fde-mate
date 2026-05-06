@@ -17,7 +17,7 @@ class CustomerService:
         self.session = session
         self.repo = repo
 
-    async def list_customers(self, query: CustomerQuery) -> PageResponse[CustomerDTO]:
+    async def list_customers(self, query: CustomerQuery, user_id: int | None = None) -> PageResponse[CustomerDTO]:
         items, total = await self.repo.search(
             keyword=query.keyword,
             industry=query.industry,
@@ -30,23 +30,23 @@ class CustomerService:
             total=total, page=query.page, size=query.size,
         )
 
-    async def get_customer(self, customer_id: int) -> CustomerDTO:
+    async def get_customer(self, customer_id: int, user_id: int | None = None) -> CustomerDTO:
         customer = await self.repo.get_with_relations(customer_id)
         if not customer or customer.is_deleted:
             raise CustomerNotFoundException()
         return self._to_dto(customer)
 
-    async def create_customer(self, payload: CustomerCreate) -> CustomerDTO:
+    async def create_customer(self, payload: CustomerCreate, user_id: int) -> CustomerDTO:
         customer = await self.repo.create(
             name=payload.name,
             industry=payload.industry,
             scale=payload.scale,
-            owner_id=payload.owner_id,
+            owner_id=user_id,
         )
         full = await self.repo.get_with_relations(customer.id)
         return self._to_dto(full)
 
-    async def update_customer(self, customer_id: int, payload: CustomerUpdate) -> CustomerDTO:
+    async def update_customer(self, customer_id: int, payload: CustomerUpdate, user_id: int | None = None) -> CustomerDTO:
         customer = await self.repo.get(customer_id)
         if not customer or customer.is_deleted:
             raise CustomerNotFoundException()
@@ -57,25 +57,25 @@ class CustomerService:
         full = await self.repo.get_with_relations(customer_id)
         return self._to_dto(full)
 
-    async def delete_customer(self, customer_id: int) -> dict:
+    async def delete_customer(self, customer_id: int, user_id: int | None = None) -> dict:
         customer = await self.repo.get(customer_id)
         if not customer:
             raise CustomerNotFoundException()
         await self.repo.soft_delete(customer_id)
         return {"deleted": True}
 
-    async def add_contact(self, customer_id: int, payload: ContactCreate) -> ContactDTO:
+    async def add_contact(self, customer_id: int, payload: ContactCreate, user_id: int | None = None) -> ContactDTO:
         customer = await self.repo.get(customer_id)
         if not customer:
             raise CustomerNotFoundException()
         contact = await self.repo.add_contact(customer_id, **payload.model_dump())
         return self._contact_to_dto(contact)
 
-    async def get_contacts(self, customer_id: int) -> list[ContactDTO]:
+    async def get_contacts(self, customer_id: int, user_id: int | None = None) -> list[ContactDTO]:
         contacts = await self.repo.get_contacts(customer_id)
         return [self._contact_to_dto(c) for c in contacts]
 
-    async def get_opportunities(self, customer_id: int) -> list[OpportunityDTO]:
+    async def get_opportunities(self, customer_id: int, user_id: int | None = None) -> list[OpportunityDTO]:
         opps = await self.repo.get_opportunities(customer_id)
         return [self._opp_to_dto(o) for o in opps]
 

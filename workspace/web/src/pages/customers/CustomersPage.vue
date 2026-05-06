@@ -4,57 +4,33 @@ import { Card, Row, Col, Button, Input, Select, Tabs, Modal, Form, message, Tag,
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { customersApi } from '@apis/modules/customers'
 import CustomerCard from '@/components/business/CustomerCard.vue'
+import type { CustomerDTO, ContactDTO, OpportunityDTO } from '@apis/modules/customers'
 
 const loading = ref(false)
-const customers = ref<any[]>([])
+const customers = ref<CustomerDTO[]>([])
 const searchKeyword = ref('')
-const statusFilter = ref<string[]>([])
+const industryFilter = ref<string[]>([])
 const activeTab = ref('all')
 const showCreateModal = ref(false)
 const createLoading = ref(false)
 
 const createForm = ref({
   name: '',
-  description: '',
   industry: '',
-  contact_name: '',
-  contact_email: '',
+  scale: '',
 })
 
-const selectedCustomer = ref<any>(null)
-const customerDetail = ref<any>(null)
-const contacts = ref<any[]>([])
-const opportunities = ref<any[]>([])
+const selectedCustomer = ref<CustomerDTO | null>(null)
+const customerDetail = ref<CustomerDTO | null>(null)
+const contacts = ref<ContactDTO[]>([])
+const opportunities = ref<OpportunityDTO[]>([])
 
-const statusOptions = [
-  { label: '活跃', value: 'active' },
-  { label: '未活跃', value: 'inactive' },
-  { label: '流失', value: 'churned' },
+const industryOptions = [
+  { label: '互联网', value: '互联网' },
+  { label: '金融', value: '金融' },
+  { label: '制造', value: '制造' },
+  { label: '教育', value: '教育' },
 ]
-
-const statusColor = (status: string) => {
-  const map: Record<string, string> = {
-    active: 'success',
-    inactive: 'default',
-    churned: 'error',
-  }
-  return map[status] || 'default'
-}
-
-const statusLabel = (status: string) => {
-  const map: Record<string, string> = {
-    active: '活跃',
-    inactive: '未活跃',
-    churned: '流失',
-  }
-  return map[status] || status
-}
-
-const healthColor = (score: number) => {
-  if (score >= 80) return '#52c41a'
-  if (score >= 60) return '#faad14'
-  return '#ff4d4f'
-}
 
 const filteredCustomers = computed(() => {
   let items = customers.value
@@ -64,12 +40,8 @@ const filteredCustomers = computed(() => {
     items = items.filter((c) => c.name.toLowerCase().includes(kw))
   }
 
-  if (statusFilter.value.length > 0) {
-    items = items.filter((c) => statusFilter.value.includes(c.status))
-  }
-
-  if (activeTab.value !== 'all') {
-    items = items.filter((c) => c.status === activeTab.value)
+  if (industryFilter.value.length > 0) {
+    items = items.filter((c) => industryFilter.value.includes(c.industry))
   }
 
   return items
@@ -87,13 +59,13 @@ const loadData = async () => {
   }
 }
 
-const handleSelectCustomer = async (customer: any) => {
+const handleSelectCustomer = async (customer: CustomerDTO) => {
   selectedCustomer.value = customer
   try {
     const [detail, contactsRes, opportunitiesRes] = await Promise.all([
-      customersApi.get(Number(customer.id)),
-      customersApi.listContacts(Number(customer.id)),
-      customersApi.listOpportunities(Number(customer.id)),
+      customersApi.get(customer.id),
+      customersApi.getContacts(customer.id),
+      customersApi.getOpportunities(customer.id),
     ])
     customerDetail.value = detail
     contacts.value = contactsRes.items || []
@@ -113,7 +85,7 @@ const handleCreate = async () => {
     await customersApi.create(createForm.value)
     message.success('创建成功')
     showCreateModal.value = false
-    createForm.value = { name: '', description: '', industry: '', contact_name: '', contact_email: '' }
+    createForm.value = { name: '', industry: '', scale: '' }
     await loadData()
   } catch {
     message.error('创建失败')
@@ -167,13 +139,13 @@ onMounted(async () => {
       </Input>
 
       <Select
-        v-model:value="statusFilter"
+        v-model:value="industryFilter"
         mode="multiple"
-        placeholder="状态筛选"
+        placeholder="行业筛选"
         class="filter-select"
         allow-clear
       >
-        <Select.Option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
+        <Select.Option v-for="opt in industryOptions" :key="opt.value" :value="opt.value">
           {{ opt.label }}
         </Select.Option>
       </Select>
@@ -185,9 +157,6 @@ onMounted(async () => {
       <Col :span="selectedCustomer ? 8 : 24">
         <Tabs v-model:activeKey="activeTab">
           <Tabs.TabPane key="all" tab="全部" />
-          <Tabs.TabPane key="active" tab="活跃" />
-          <Tabs.TabPane key="inactive" tab="未活跃" />
-          <Tabs.TabPane key="churned" tab="流失" />
         </Tabs>
 
         <Spin :spinning="loading">
@@ -218,26 +187,18 @@ onMounted(async () => {
               <Avatar :size="48">{{ selectedCustomer.name?.[0] }}</Avatar>
               <div class="detail-title-text">
                 <h3>{{ selectedCustomer.name }}</h3>
-                <Tag :color="statusColor(selectedCustomer.status)">
-                  {{ statusLabel(selectedCustomer.status) }}
-                </Tag>
-                <span v-if="selectedCustomer.health_score" class="health-score">
-                  健康度: <span :style="{ color: healthColor(selectedCustomer.health_score) }">
-                    {{ selectedCustomer.health_score }}
-                  </span>
-                </span>
+                <Tag v-if="selectedCustomer.industry">{{ selectedCustomer.industry }}</Tag>
+                <Tag v-if="selectedCustomer.scale">{{ selectedCustomer.scale }}</Tag>
               </div>
-              <Button type="link" danger @click="handleDelete(Number(selectedCustomer.id))">
+              <Button type="link" danger @click="handleDelete(selectedCustomer.id)">
                 删除
               </Button>
             </div>
           </template>
 
           <Descriptions :column="2" size="small">
-            <Descriptions.Item label="描述">{{ selectedCustomer.description || '-' }}</Descriptions.Item>
-            <Descriptions.Item label="行业">{{ selectedCustomer.industry || '-' }}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{{ selectedCustomer.created_at || '-' }}</Descriptions.Item>
-            <Descriptions.Item label="更新时间">{{ selectedCustomer.updated_at || '-' }}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{{ selectedCustomer.gmtCreate?.substring(0, 19) || '-' }}</Descriptions.Item>
+            <Descriptions.Item label="更新时间">{{ selectedCustomer.gmtModified?.substring(0, 19) || '-' }}</Descriptions.Item>
           </Descriptions>
 
           <Tabs class="detail-tabs" type="card">
@@ -246,7 +207,7 @@ onMounted(async () => {
                 <Avatar>{{ contact.name?.[0] }}</Avatar>
                 <div class="contact-info">
                   <div class="contact-name">{{ contact.name }}</div>
-                  <div class="contact-email">{{ contact.email }}</div>
+                  <div class="contact-email">{{ contact.email || contact.phone || '-' }}</div>
                 </div>
               </div>
               <div v-if="contacts.length === 0" class="empty-text">暂无联系人</div>
@@ -254,9 +215,9 @@ onMounted(async () => {
 
             <Tabs.TabPane key="opportunities" :tab="`商机 (${opportunities.length})`">
               <div v-for="opp in opportunities" :key="opp.id" class="opportunity-item">
-                <div class="opp-name">{{ opp.name }}</div>
+                <div class="opp-name">{{ opp.title }}</div>
                 <Tag>{{ opp.stage }}</Tag>
-                <span class="opp-amount">{{ opp.amount }}</span>
+                <span v-if="opp.amount" class="opp-amount">{{ opp.amount }}</span>
               </div>
               <div v-if="opportunities.length === 0" class="empty-text">暂无商机</div>
             </Tabs.TabPane>
@@ -276,11 +237,11 @@ onMounted(async () => {
         <Form.Item label="名称" required>
           <Input v-model:value="createForm.name" placeholder="输入客户名称" />
         </Form.Item>
-        <Form.Item label="描述">
-          <Input.TextArea v-model:value="createForm.description" :rows="2" />
-        </Form.Item>
         <Form.Item label="行业">
           <Input v-model:value="createForm.industry" placeholder="输入行业" />
+        </Form.Item>
+        <Form.Item label="规模">
+          <Input v-model:value="createForm.scale" placeholder="输入规模" />
         </Form.Item>
       </Form>
     </Modal>
@@ -330,11 +291,6 @@ onMounted(async () => {
 
 .detail-title-text h3 {
   margin: 0 0 4px;
-}
-
-.health-score {
-  margin-left: 12px;
-  font-size: 14px;
 }
 
 .detail-tabs {

@@ -8,20 +8,21 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons-vue'
 import { dashboardApi } from '@apis/modules/dashboard'
+import type { DashboardSummary, DashboardKeyEvent } from '@apis/modules/dashboard'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const loading = ref(false)
-const summary = ref<any>(null)
-const recentTasks = ref<any[]>([])
-const recentProjects = ref<any[]>([])
-const notifications = ref<any[]>([])
-const keyEvents = ref<any[]>([])
+const summary = ref<DashboardSummary | null>(null)
+const recentTasks = ref<Array<{ id: number; title: string; status: string; priority: string; gmt_create: string }>>([])
+const recentProjects = ref<Array<{ id: number; name: string; phase: string; health: number }>>([])
+const notifications = ref<Array<{ id: number; title: string; read: boolean }>>([])
+const keyEvents = ref<DashboardKeyEvent[]>([])
 
 const taskCompletionRate = computed(() => {
   if (!summary.value) return 0
-  const { total_tasks, completed_tasks } = summary.value
-  return total_tasks ? Math.round((completed_tasks / total_tasks) * 100) : 0
+  const { task_count, pending_tasks } = summary.value
+  return task_count ? Math.round(((task_count - pending_tasks) / task_count) * 100) : 0
 })
 
 onMounted(async () => {
@@ -68,18 +69,20 @@ const statusLabel = (status: string) => {
 
 const priorityColor = (priority: string) => {
   const map: Record<string, string> = {
-    low: 'blue',
-    medium: 'orange',
-    high: 'red',
+    p0: 'red',
+    p1: 'orange',
+    p2: 'blue',
+    p3: 'default',
   }
   return map[priority] || 'default'
 }
 
 const priorityLabel = (priority: string) => {
   const map: Record<string, string> = {
-    low: '低',
-    medium: '中',
-    high: '高',
+    p0: 'P0',
+    p1: 'P1',
+    p2: 'P2',
+    p3: 'P3',
   }
   return map[priority] || priority
 }
@@ -99,7 +102,7 @@ const priorityLabel = (priority: string) => {
           <Card :bordered="false">
             <Statistic
               title="总任务数"
-              :value="summary?.total_tasks ?? 0"
+              :value="summary?.task_count ?? 0"
               :prefix="ClockCircleOutlined"
             />
           </Card>
@@ -108,7 +111,7 @@ const priorityLabel = (priority: string) => {
           <Card :bordered="false">
             <Statistic
               title="已完成"
-              :value="summary?.completed_tasks ?? 0"
+              :value="(summary?.task_count ?? 0) - (summary?.pending_tasks ?? 0)"
               :value-style="{ color: '#52c41a' }"
               :prefix="CheckCircleOutlined"
             />
@@ -118,7 +121,7 @@ const priorityLabel = (priority: string) => {
           <Card :bordered="false">
             <Statistic
               title="活跃项目"
-              :value="summary?.active_projects ?? 0"
+              :value="summary?.project_count ?? 0"
               :prefix="FolderOutlined"
             />
           </Card>
@@ -188,7 +191,7 @@ const priorityLabel = (priority: string) => {
           >
             <div class="event-content">
               <span class="event-title">{{ event.title }}</span>
-              <span class="event-time">{{ event.created_at }}</span>
+              <span class="event-time">{{ event.gmt_create }}</span>
             </div>
           </Timeline.Item>
         </Timeline>

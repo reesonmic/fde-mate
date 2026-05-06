@@ -11,7 +11,16 @@ from app.config.logging import setup_logging
 from app.middleware.trace import TraceMiddleware
 from app.middleware.logging import LoggingMiddleware
 from app.exceptions.handlers import setup_exception_handlers
-from app.routers import auth, dashboard, tasks, projects, customers, files, coach, copilot, mentions, settings_router
+from app.routers.auth import router as auth_router
+from app.routers.dashboard import router as dashboard_router
+from app.routers.tasks import router as tasks_router
+from app.routers.projects import router as projects_router
+from app.routers.customers import router as customers_router
+from app.routers.files import router as files_router
+from app.routers.coach import router as coach_router
+from app.routers.copilot import router as copilot_router
+from app.routers.mentions import router as mentions_router
+from app.routers.settings import router as settings_router
 
 setup_logging()
 
@@ -46,16 +55,16 @@ app.add_middleware(LoggingMiddleware)
 setup_exception_handlers(app)
 
 # Routes
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
-app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
-app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"])
-app.include_router(customers.router, prefix="/api/v1/customers", tags=["customers"])
-app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
-app.include_router(coach.router, prefix="/api/v1/coach", tags=["coach"])
-app.include_router(copilot.router, prefix="/api/v1/copilot", tags=["copilot"])
-app.include_router(mentions.router, prefix="/api/v1/mentions", tags=["mentions"])
-app.include_router(settings_router.router, prefix="/api/v1/settings", tags=["settings"])
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(dashboard_router, prefix="/api/v1/dashboard", tags=["dashboard"])
+app.include_router(tasks_router, prefix="/api/v1/tasks", tags=["tasks"])
+app.include_router(projects_router, prefix="/api/v1/projects", tags=["projects"])
+app.include_router(customers_router, prefix="/api/v1/customers", tags=["customers"])
+app.include_router(files_router, prefix="/api/v1/files", tags=["files"])
+app.include_router(coach_router, prefix="/api/v1/coach", tags=["coach"])
+app.include_router(copilot_router, prefix="/api/v1/copilot", tags=["copilot"])
+app.include_router(mentions_router, prefix="/api/v1/mentions", tags=["mentions"])
+app.include_router(settings_router, prefix="/api/v1/settings", tags=["settings"])
 
 
 @app.get("/health")

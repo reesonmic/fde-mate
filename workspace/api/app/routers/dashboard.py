@@ -7,6 +7,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.db import get_async_session
+from app.deps.auth import UserContext, current_user
 from app.models.task import Task
 from app.models.project import Project
 from app.models.customer import Customer
@@ -15,12 +16,12 @@ router = APIRouter()
 
 
 @router.get("/summary")
-async def dashboard_summary(user_id: int = 1, session: AsyncSession = Depends(get_async_session)):
+async def dashboard_summary(user: UserContext = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     task_count = await session.scalar(
-        select(func.count()).where(Task.is_deleted == 0, Task.assignee_id == user_id)
+        select(func.count()).where(Task.is_deleted == 0, Task.assignee_id == user.id)
     )
     project_count = await session.scalar(
-        select(func.count()).where(Project.is_deleted == 0, Project.owner_id == user_id)
+        select(func.count()).where(Project.is_deleted == 0, Project.owner_id == user.id)
     )
     customer_count = await session.scalar(
         select(func.count()).where(Customer.is_deleted == 0)
@@ -34,9 +35,9 @@ async def dashboard_summary(user_id: int = 1, session: AsyncSession = Depends(ge
 
 
 @router.get("/recent-tasks")
-async def recent_tasks(limit: int = 10, user_id: int = 1, session: AsyncSession = Depends(get_async_session)):
+async def recent_tasks(limit: int = 10, user: UserContext = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     result = await session.execute(
-        select(Task).where(Task.is_deleted == 0, Task.assignee_id == user_id)
+        select(Task).where(Task.is_deleted == 0, Task.assignee_id == user.id)
         .order_by(Task.gmt_create.desc()).limit(limit)
     )
     tasks = result.scalars().all()
@@ -50,9 +51,9 @@ async def recent_tasks(limit: int = 10, user_id: int = 1, session: AsyncSession 
 
 
 @router.get("/recent-projects")
-async def recent_projects(limit: int = 5, user_id: int = 1, session: AsyncSession = Depends(get_async_session)):
+async def recent_projects(limit: int = 5, user: UserContext = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     result = await session.execute(
-        select(Project).where(Project.is_deleted == 0, Project.owner_id == user_id)
+        select(Project).where(Project.is_deleted == 0, Project.owner_id == user.id)
         .order_by(Project.gmt_create.desc()).limit(limit)
     )
     projects = result.scalars().all()
@@ -63,15 +64,15 @@ async def recent_projects(limit: int = 5, user_id: int = 1, session: AsyncSessio
 
 
 @router.get("/notifications")
-async def notifications(page: int = 1, size: int = 10):
+async def notifications(page: int = 1, size: int = 10, user: UserContext = Depends(current_user)):
     return {"items": [], "total": 0}
 
 
 @router.get("/key-events")
-async def key_events(days: int = 7, session: AsyncSession = Depends(get_async_session)):
+async def key_events(days: int = 7, user: UserContext = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
     since = datetime.utcnow() - timedelta(days=days)
     result = await session.execute(
-        select(Task).where(Task.is_deleted == 0, Task.gmt_create >= since)
+        select(Task).where(Task.is_deleted == 0, Task.assignee_id == user.id, Task.gmt_create >= since)
         .order_by(Task.gmt_create.desc()).limit(20)
     )
     tasks = result.scalars().all()

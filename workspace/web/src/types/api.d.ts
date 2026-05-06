@@ -58,26 +58,28 @@ export interface DashboardChartData {
 export interface TaskCreateRequest {
   title: string
   description?: string
-  priority?: 'low' | 'medium' | 'high'
-  assigneeId?: string
-  projectId?: string
-  deadline?: string
+  priority?: 'p0' | 'p1' | 'p2' | 'p3'
+  assigneeId?: number
+  projectId?: number
+  dueAt?: string
+  tags?: string[]
 }
 
 export interface TaskUpdateRequest {
   title?: string
   description?: string
-  status?: 'todo' | 'in_progress' | 'blocked' | 'done'
-  priority?: 'low' | 'medium' | 'high'
-  assigneeId?: string
-  deadline?: string
+  status?: 'todo' | 'in_progress' | 'review' | 'done' | 'blocked'
+  priority?: 'p0' | 'p1' | 'p2' | 'p3'
+  assigneeId?: number
+  dueAt?: string
+  tags?: string[]
 }
 
 export interface TaskQueryParams extends PageRequest {
   status?: string
   priority?: string
-  assigneeId?: string
-  projectId?: string
+  assigneeId?: number
+  projectId?: number
 }
 
 // Projects
@@ -141,14 +143,14 @@ export interface CoachQueryParams extends PageRequest {
 export interface CopilotRequest {
   assistantType: string
   message: string
-  mentions?: any[]
+  mentions?: Array<{ type: string; id: string; label: string }>
   sessionId?: string
 }
 
 export interface ActionPreview {
   actionId: string
   toolName: string
-  params: any
+  params: Record<string, unknown>
   preview: string
   expiresAt: string
 }
@@ -177,5 +179,5 @@ export interface ApiResponse<T> {
 export interface ApiErrorResponse {
   code: number
   message: string
-  details?: any
+  details?: Record<string, unknown>
 }

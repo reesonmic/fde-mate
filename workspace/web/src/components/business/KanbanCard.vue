@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Tag, Avatar } from 'ant-design-vue'
+import { Tag } from 'ant-design-vue'
 import StatusDot from '@/components/common/StatusDot.vue'
-import type { TaskDTO } from '@/types/api'
+import type { TaskDTO } from '@/types/business'
 
 interface Props {
   task: TaskDTO
@@ -12,17 +12,29 @@ const props = defineProps<Props>()
 
 const priorityColor = computed(() => {
   const colors: Record<string, string> = {
-    high: 'red',
-    medium: 'orange',
-    low: 'blue',
+    p0: 'red',
+    p1: 'orange',
+    p2: 'blue',
+    p3: 'default',
   }
   return colors[props.task.priority] || 'default'
+})
+
+const priorityLabel = computed(() => {
+  const labels: Record<string, string> = {
+    p0: 'P0',
+    p1: 'P1',
+    p2: 'P2',
+    p3: 'P3',
+  }
+  return labels[props.task.priority] || props.task.priority
 })
 
 const statusColor = computed(() => {
   const colors: Record<string, 'success' | 'warning' | 'error' | 'info' | 'default'> = {
     done: 'success',
     in_progress: 'info',
+    review: 'cyan',
     todo: 'default',
     blocked: 'error',
   }
@@ -37,13 +49,10 @@ const statusColor = computed(() => {
       <span class="kanban-card-title">{{ task.title }}</span>
     </div>
     <div class="kanban-card-meta">
-      <Tag :color="priorityColor">{{ task.priority }}</Tag>
-      <Avatar v-if="task.assignee" :src="task.assignee?.avatar" :size="24">
-        {{ task.assignee?.name?.charAt(0) }}
-      </Avatar>
+      <Tag :color="priorityColor">{{ priorityLabel }}</Tag>
     </div>
     <div class="kanban-card-footer">
-      <span v-if="task.deadline" class="kanban-card-deadline">{{ task.deadline }}</span>
+      <span v-if="task.dueAt" class="kanban-card-deadline">{{ task.dueAt?.substring(0, 10) }}</span>
     </div>
   </div>
 </template>

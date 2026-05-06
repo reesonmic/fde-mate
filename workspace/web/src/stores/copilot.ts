@@ -26,7 +26,7 @@ export const useCopilotStore = defineStore('copilot', () => {
   const sessionIds = ref<Record<string, string>>(SESSION_IDS)
 
   // Current pending action for confirmation
-  const pendingAction = ref<any>(null)
+  const pendingAction = ref<Record<string, unknown> | null>(null)
 
   const getMessages = (assistantType: string) => {
     return messages.value[assistantType] || []
@@ -43,10 +43,12 @@ export const useCopilotStore = defineStore('copilot', () => {
     messages.value[assistantType].push(message)
   }
 
+  const streamingMsgIds = ref<Record<string, string>>({})
+
   const sendMessage = async (
     assistantType: string,
     content: string,
-    mentions?: any[]
+    mentions?: Array<{ type: string; id: string; label: string }>
   ) => {
     // Add user message
     addMessage(assistantType, {
@@ -58,32 +60,80 @@ export const useCopilotStore = defineStore('copilot', () => {
       metadata: { mentions },
     })
 
-    // Send to API and handle response
-    try {
-      const response = await copilotApi.chat({
-        assistantType,
-        message: content,
-        mentions,
-        sessionId: getSessionId(assistantType),
-      })
+    // Prepare assistant message slot for streaming
+    const assistantMsgId = `msg-ai-${Date.now()}-${assistantType}`
+    addMessage(assistantType, {
+      id: assistantMsgId,
+      content: '',
+      role: 'assistant',
+      timestamp: new Date().toISOString(),
+      type: 'text',
+    })
+    streamingMsgIds.value[assistantType] = assistantMsgId
 
-      // Add assistant response
-      addMessage(assistantType, response)
-
-      // Check if response has pending action
-      if (response.type === 'action') {
-        pendingAction.value = response.metadata
-      }
-    } catch (error) {
-      // Add error message
-      addMessage(assistantType, {
-        id: `msg-err-${Date.now()}`,
-        content: '抱歉，发生了一个错误。请稍后重试。',
-        role: 'assistant',
-        timestamp: new Date().toISOString(),
-        type: 'text',
-      })
+    // Map frontend assistant type to backend assistantId
+    const assistantIdMap: Record<string, string> = {
+      task: 'tasks',
+      project: 'project',
+      coach: 'coach',
+      file: 'files',
+      chat: 'chat',
     }
+
+    copilotApi.chat(
+      {
+        assistantId: assistantIdMap[assistantType] || 'chat',
+        message: content,
+        sessionId: getSessionId(assistantType),
+        mode: 'smart',
+        context: { assistantType },
+      },
+      (chunk) => {
+        const msg = messages.value[assistantType]?.find(
+          (m) => m.id === streamingMsgIds.value[assistantType],
+        )
+        if (!msg) return
+
+        if (typeof chunk === 'string') {
+          msg.content += chunk
+        } else if (chunk.type === 'token') {
+          msg.content += chunk.delta || ''
+        } else if (chunk.type === 'action') {
+          msg.type = 'action'
+          msg.metadata = chunk
+          pendingAction.value = chunk
+        } else if (chunk.type === 'report') {
+          msg.type = 'report'
+          msg.metadata = chunk
+        } else if (chunk.type === 'searchResults') {
+          msg.type = 'searchResults'
+          msg.metadata = chunk
+        } else if (chunk.type === 'nextSteps') {
+          msg.type = 'nextSteps'
+          msg.metadata = chunk
+        }
+      },
+      () => {
+        // Stream done
+        const msg = messages.value[assistantType]?.find(
+          (m) => m.id === streamingMsgIds.value[assistantType],
+        )
+        if (msg && !msg.content) {
+          msg.content = '抱歉，未收到有效回复。'
+        }
+        delete streamingMsgIds.value[assistantType]
+      },
+      () => {
+        // Error
+        const msg = messages.value[assistantType]?.find(
+          (m) => m.id === streamingMsgIds.value[assistantType],
+        )
+        if (msg) {
+          msg.content = '抱歉，发生了一个错误。请稍后重试。'
+        }
+        delete streamingMsgIds.value[assistantType]
+      },
+    )
   }
 
   const executeAction = async (actionId: string, toolName: string) => {

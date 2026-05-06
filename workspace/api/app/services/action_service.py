@@ -68,7 +68,16 @@ class ActionService:
         return payload
 
     async def execute_action(self, action_id: str, user_id: int) -> dict:
-        payload = await self.verify_action(action_id, user_id, "")
+        payload = await self._get_action(action_id)
+        if not payload:
+            raise AIActionNotFoundException()
+        if payload.get("status") != "pending":
+            raise AIActionExpiredException()
+        if payload.get("user_id") != user_id:
+            raise AIActionUserMismatchException()
+        # Verify tool_name is non-empty
+        if not payload.get("tool_name"):
+            raise AIActionToolMismatchException()
         payload["status"] = "executed"
         await self._save_action(action_id, payload)
         return {"success": True, "result": payload.get("args", {})}

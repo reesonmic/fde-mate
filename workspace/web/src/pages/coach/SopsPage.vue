@@ -4,10 +4,11 @@ import { Row, Col, Input, Spin, Empty, Tag, Select } from 'ant-design-vue'
 import { SearchOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { coachApi } from '@apis/modules/coach'
+import type { SopDTO } from '@/types/business'
 import SopCard from '@/components/business/SopCard.vue'
 
 const router = useRouter()
-const sops = ref<any[]>([])
+const sops = ref<SopDTO[]>([])
 const searchQuery = ref('')
 const statusFilter = ref('')
 const loading = ref(false)

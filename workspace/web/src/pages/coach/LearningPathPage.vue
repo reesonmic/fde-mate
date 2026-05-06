@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Card, Steps } from 'ant-design-vue'
 import { coachApi } from '@/apis/modules/coach'
+import type { LearningPathDTO } from '@/types/business'
 
-const learningPaths = ref<any[]>([])
+const learningPaths = ref<LearningPathDTO[]>([])
 const loading = ref(false)
 
 onMounted(async () => {

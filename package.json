@@ -1,0 +1,9 @@
+{
+	"dependencies": {
+		"dompurify": "^3.4.1",
+		"marked": "^18.0.2"
+	},
+	"devDependencies": {
+		"@types/dompurify": "^3.2.0"
+	}
+}

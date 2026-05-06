@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Tag, Avatar, Checkbox } from 'ant-design-vue'
 import StatusDot from '@/components/common/StatusDot.vue'
-import type { TaskDTO } from '@/types/api'
+import type { TaskDTO } from '@/types/business'
 
 interface Props {
   task: TaskDTO
@@ -14,23 +14,35 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  select: [id: string]
-  click: [id: string]
+  select: [id: number]
+  click: [id: number]
 }>()
 
 const priorityLabel = computed(() => {
   const labels: Record<string, string> = {
-    high: '高',
-    medium: '中',
-    low: '低',
+    p0: 'P0',
+    p1: 'P1',
+    p2: 'P2',
+    p3: 'P3',
   }
   return labels[props.task.priority] || props.task.priority
+})
+
+const priorityColor = computed(() => {
+  const colors: Record<string, string> = {
+    p0: 'red',
+    p1: 'orange',
+    p2: 'blue',
+    p3: 'default',
+  }
+  return colors[props.task.priority] || 'default'
 })
 
 const statusColor = computed(() => {
   const colors: Record<string, 'success' | 'warning' | 'error' | 'info' | 'default'> = {
     done: 'success',
     in_progress: 'info',
+    review: 'cyan',
     todo: 'default',
     blocked: 'error',
   }
@@ -48,15 +60,12 @@ const handleClick = () => {
 
 <template>
   <div class="task-row" :class="{ 'task-row--selected': selected }" @click="handleClick">
-    <Checkbox :checked="selected" @change="(e: any) => handleSelect(e.target.checked)" />
+    <Checkbox :checked="selected" @change="handleSelect" />
     <StatusDot :status="statusColor" />
     <span class="task-row-title">{{ task.title }}</span>
     <div class="task-row-meta">
-      <Tag>{{ priorityLabel }}</Tag>
-      <Avatar v-if="task.assignee" :src="task.assignee?.avatar" :size="20">
-        {{ task.assignee?.name?.charAt(0) }}
-      </Avatar>
-      <span class="task-row-deadline">{{ task.deadline }}</span>
+      <Tag :color="priorityColor">{{ priorityLabel }}</Tag>
+      <span v-if="task.dueAt" class="task-row-deadline">{{ task.dueAt }}</span>
     </div>
   </div>
 </template>
