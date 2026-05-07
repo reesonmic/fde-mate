@@ -1,0 +1,18 @@
+:80 {
+    # Health check endpoint (used by Docker healthcheck)
+    handle /health {
+        respond "OK" 200
+    }
+
+    # API reverse proxy - handle first
+    handle /api/* {
+        reverse_proxy api:8080
+    }
+
+    # Static files and SPA fallback
+    handle {
+        root * /usr/share/caddy
+        try_files {path} /index.html
+        file_server
+    }
+}

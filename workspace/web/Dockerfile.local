@@ -1,0 +1,114 @@
+# FDE Mate Web - Local Development Dockerfile
+# Optimized for fast builds with maximum layer caching
+#
+# Build optimization strategy:
+# 1. Copy package.json/package-lock.json first -> dependencies layer cached
+# 2. Install dependencies -> heavy layer cached unless package.json changes
+# 3. Copy source code -> lightweight layer, changes frequently
+# 4. Build application -> executed only when source changes
+#
+# Usage:
+#   cd workspace/web
+#   docker build -f Dockerfile.local -t fde-web-dev .
+
+# ============================================================================
+# Stage 1: Dependencies Installation
+# This stage is cached unless package.json or lockfiles change
+# ============================================================================
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Install build dependencies (needed for native modules)
+RUN apk add --no-cache libc6-compat
+
+# Copy only package files first (maximizes Docker layer caching)
+# These change less frequently than source code
+COPY package.json ./
+COPY package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+
+# Install dependencies based on the lock file present
+# Use --frozen-lockfile equivalent behavior when possible
+RUN if [ -f pnpm-lock.yaml ]; then \
+        npm install -g pnpm && pnpm install --frozen-lockfile; \
+    elif [ -f yarn.lock ]; then \
+        npm install -g yarn && yarn install --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then \
+        npm ci --include=dev; \
+    else \
+        npm install; \
+    fi
+
+# ============================================================================
+# Stage 2: Development Server
+# Hot reload enabled for local development
+# ============================================================================
+FROM node:20-alpine AS dev
+
+WORKDIR /app
+
+# Install lightweight HTTP server for production fallback
+# and curl for healthchecks
+RUN apk add --no-cache curl
+
+# Set environment for development
+ENV NODE_ENV=development \
+    VITE_USE_MOCK=false \
+    CHOKIDAR_USEPOLLING=true \
+    WATCHPACK_POLLING=true
+
+# Copy node_modules from deps stage (cached layer)
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package.json for npm scripts
+COPY package.json ./
+
+# Copy source files
+# These are mounted as volumes in docker-compose.dev.yml for hot reload
+# But we need them for standalone builds
+COPY vite.config.ts tsconfig.json tsconfig.node.json index.html ./
+COPY public ./public
+COPY src ./src
+
+# Expose Vite dev server port
+EXPOSE 5173
+
+# Default to dev server with hot reload
+# Can be overridden in docker-compose
+CMD ["npm", "run", "dev:real", "--", "--host"]
+
+# ============================================================================
+# Stage 3: Build for Production Preview
+# Only used when building for preview (not in dev mode)
+# ============================================================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy deps and source from previous stages
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=dev /app ./
+
+# Build the application
+RUN npm run build
+
+# ============================================================================
+# Stage 4: Production Preview with Caddy
+# Minimal image for testing production builds locally
+# ============================================================================
+FROM caddy:2-alpine AS production
+
+# Copy built application
+COPY --from=builder /app/dist /usr/share/caddy
+
+# Copy Caddy configuration
+COPY Caddyfile /etc/caddy/Caddyfile
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
+# Expose HTTP port
+EXPOSE 80
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

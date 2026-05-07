@@ -1,0 +1,72 @@
+# FDE Mate 应用服务（使用外部 MySQL/Redis）
+# ES/Milvus 因网络问题暂不使用
+
+services:
+  api:
+    build:
+      context: ../../api
+      dockerfile: Dockerfile
+    container_name: fde-mate-api
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: mysql+aiomysql://root:20260227@172.17.0.2:3306/fde_workbench
+      REDIS_URL: redis://172.17.0.3:6379/0
+      ES_URL: ""
+      MILVUS_HOST: ""
+      MILVUS_PORT: "0"
+      AI_ORCHESTRATOR_URL: http://ai-orchestrator:8090
+      JWT_SECRET_KEY: fde-workbench-dev-jwt-secret-key-2026
+      LLM_PROVIDER: mock
+    networks:
+      - products-shared
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  ai-orchestrator:
+    build:
+      context: ../../ai-orchestrator
+      dockerfile: Dockerfile
+    container_name: fde-mate-ai
+    ports:
+      - "8090:8090"
+    environment:
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      API_BASE_URL: http://api:8080
+      MILVUS_HOST: ""
+      MILVUS_PORT: "0"
+      ES_HOST: ""
+      ES_PORT: "0"
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - products-shared
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8090/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../../web
+      dockerfile: Dockerfile.local
+    container_name: fde-mate-web
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    networks:
+      - products-shared
+    restart: unless-stopped
+
+networks:
+  products-shared:
+    external: true

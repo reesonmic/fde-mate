@@ -1,0 +1,67 @@
+# FDE Mate API - Development Dockerfile
+# Optimized for fast iteration with hot reload support
+# Uses named volume for virtual environment persistence
+
+FROM python:3.11-slim
+
+# Install system dependencies
+# Combine into one layer to reduce image size
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    default-libmysqlclient-dev \
+    pkg-config \
+    build-essential \
+    gcc \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Set working directory
+WORKDIR /app
+
+# Install Poetry
+# Use POETRY_HOME to ensure consistent installation path
+ENV POETRY_HOME=/opt/poetry \
+    POETRY_VERSION=1.8.2 \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_CACHE_DIR=/opt/poetry-cache
+
+RUN pip install --no-cache-dir poetry==$POETRY_VERSION && \
+    mkdir -p $POETRY_CACHE_DIR
+
+# Add Poetry to PATH
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
+# Copy only dependency files first (for better caching)
+# This layer is cached unless pyproject.toml/poetry.lock changes
+COPY pyproject.toml poetry.lock* ./
+
+# Configure poetry to not create virtualenv in container (we'll use named volume)
+# But we'll install deps to ensure they're cached in the volume layer
+RUN poetry config virtualenvs.create true && \
+    poetry config virtualenvs.in-project true
+
+# Create virtual environment and install dependencies
+# This step benefits from cache when pyproject.toml doesn't change
+RUN poetry install --no-interaction --no-root --no-ansi
+
+# Copy application code
+# This is done last as it changes most frequently
+COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini ./
+
+# Install the project itself (in editable mode for dev)
+RUN poetry install --no-interaction --no-ansi
+
+# Environment configuration
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Default command (overridden in docker-compose)
+CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]

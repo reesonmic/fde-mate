@@ -1,0 +1,280 @@
+# FDE Mate Development Docker Compose
+# Optimized for hot reload and fast development cycles
+# Usage: docker compose -f docker-compose.dev.yml up -d
+#
+# Key optimizations:
+# 1. Volume mounts for source code (no rebuild needed for code changes)
+# 2. Named volumes for node_modules and Python packages (persistent caching)
+# 3. Host network mode for faster networking (Linux only)
+# 4. .dockerignore files to minimize build context
+
+version: '3.8'
+
+name: fde-mate-dev
+
+services:
+  # --- Application Services ---
+
+  api:
+    build:
+      context: ../../api
+      dockerfile: Dockerfile.dev
+    container_name: fde-mate-api-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount source code for hot reload
+      - ../../api/app:/app/app:ro
+      - ../../api/alembic:/app/alembic:ro
+      # Named volume for virtual environment (persistent)
+      - api-venv:/app/.venv
+    environment:
+      DATABASE_URL: mysql+aiomysql://root:fde2026dev@mysql:3306/fde_workbench
+      REDIS_URL: redis://redis:6379/0
+      ES_URL: http://elasticsearch:9200
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
+      AI_ORCHESTRATOR_URL: http://ai-orchestrator:8090
+      JWT_SECRET_KEY: fde-workbench-dev-jwt-secret-key-2026
+      LLM_PROVIDER: mock
+      PYTHONPATH: /app
+      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+    working_dir: /app
+    command: >
+      sh -c "
+        poetry install --no-interaction --no-root &&
+        poetry run alembic upgrade head 2>/dev/null || true &&
+        poetry run uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload --reload-dir /app/app
+      "
+    networks:
+      - fde-dev
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  ai-orchestrator:
+    build:
+      context: ../../ai-orchestrator
+      dockerfile: Dockerfile.dev
+    container_name: fde-mate-ai-dev
+    ports:
+      - "8090:8090"
+    volumes:
+      # Mount source code for hot reload
+      - ../../ai-orchestrator/app:/app/app:ro
+      # Named volume for virtual environment (persistent)
+      - ai-venv:/app/.venv
+    environment:
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      API_BASE_URL: http://api:8080
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
+      ES_HOST: elasticsearch
+      ES_PORT: 9200
+      PYTHONPATH: /app
+      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+    working_dir: /app
+    command: >
+      sh -c "
+        poetry install --no-interaction --no-root &&
+        poetry run uvicorn app.main:app --host 0.0.0.0 --port 8090 --reload --reload-dir /app/app
+      "
+    networks:
+      - fde-dev
+    depends_on:
+      api:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../../web
+      dockerfile: Dockerfile.local
+    container_name: fde-mate-web-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount source code for hot reload
+      - ../../web/src:/app/src:ro
+      - ../../web/public:/app/public:ro
+      - ../../web/index.html:/app/index.html:ro
+      - ../../web/vite.config.ts:/app/vite.config.ts:ro
+      - ../../web/tsconfig.json:/app/tsconfig.json:ro
+      - ../../web/tsconfig.node.json:/app/tsconfig.node.json:ro
+      # Named volume for node_modules (persistent cache)
+      - web-node-modules:/app/node_modules
+      # Volume for Vite cache
+      - web-vite-cache:/app/node_modules/.vite
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+      VITE_USE_MOCK: "false"
+      CHOKIDAR_USEPOLLING: "true"  # Better file watching in Docker
+      WATCHPACK_POLLING: "true"
+    working_dir: /app
+    command: >
+      sh -c "
+        npm install &&
+        npm run dev:real
+      "
+    networks:
+      - fde-dev
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Celery Worker (Optional) ---
+
+  celery-worker:
+    build:
+      context: ../../api
+      dockerfile: Dockerfile.dev
+    container_name: fde-mate-celery-dev
+    volumes:
+      - ../../api/app:/app/app:ro
+      - api-venv:/app/.venv
+    environment:
+      DATABASE_URL: mysql+aiomysql://root:fde2026dev@mysql:3306/fde_workbench
+      REDIS_URL: redis://redis:6379/0
+      ES_URL: http://elasticsearch:9200
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
+      AI_ORCHESTRATOR_URL: http://ai-orchestrator:8090
+      JWT_SECRET_KEY: fde-workbench-dev-jwt-secret-key-2026
+      LLM_PROVIDER: mock
+      C_FORCE_ROOT: "true"
+      PYTHONPATH: /app
+      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+    working_dir: /app
+    command: >
+      sh -c "
+        poetry install --no-interaction --no-root &&
+        poetry run celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
+      "
+    networks:
+      - fde-dev
+    depends_on:
+      - api
+      - redis
+    restart: unless-stopped
+
+  # --- Dependencies ---
+
+  mysql:
+    image: mysql:8.0
+    container_name: fde-mate-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: fde2026dev
+      MYSQL_DATABASE: fde_workbench
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATE: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - fde-dev
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: fde-mate-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fde-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  elasticsearch:
+    image: elasticsearch:8.12.0
+    container_name: fde-mate-es-dev
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - fde-dev
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
+  milvus:
+    image: milvusdb/milvus:v2.3.0
+    container_name: fde-mate-milvus-dev
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_USE_EMBED: "true"
+      ETCD_DATA_DIR: /var/lib/milvus/etcd
+      COMMON_STORAGETYPE: local
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    networks:
+      - fde-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  fde-dev:
+    driver: bridge
+
+volumes:
+  # Application cache volumes
+  api-venv:
+  ai-venv:
+  web-node-modules:
+  web-vite-cache:
+  # Data persistence volumes
+  mysql_data:
+  redis_data:
+  es_data:
+  milvus_data:
