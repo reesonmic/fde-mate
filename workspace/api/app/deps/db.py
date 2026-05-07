@@ -18,12 +18,16 @@ def get_async_engine():
         url = url.replace("mysql://", "mysql+aiomysql://")
     elif url.startswith("mysql+pymysql://"):
         url = url.replace("mysql+pymysql://", "mysql+aiomysql://")
+    elif url.startswith("sqlite://"):
+        # SQLite uses aiosqlite for async support
+        if not url.startswith("sqlite+aiosqlite://"):
+            url = url.replace("sqlite://", "sqlite+aiosqlite://")
 
     return create_async_engine(
         url,
         pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
+        pool_size=10 if "sqlite" not in url else 1,  # SQLite uses single connection
+        max_overflow=0 if "sqlite" not in url else 0,
     )
 
 
