@@ -99,3 +99,34 @@ class TaskRepository(BaseRepository[Task]):
         from app.models.project import Project
         project = await self.session.get(Project, project_id)
         return project is not None and project.owner_id == user_id
+
+    # ---------- Dashboard helpers (M6-API-07) ----------
+
+    async def count_by_assignee(self, assignee_id: int) -> int:
+        return await self.session.scalar(
+            select(func.count()).where(
+                Task.is_deleted == 0, Task.assignee_id == assignee_id
+            )
+        ) or 0
+
+    async def list_recent_by_assignee(self, assignee_id: int, limit: int) -> list[Task]:
+        result = await self.session.execute(
+            select(Task)
+            .where(Task.is_deleted == 0, Task.assignee_id == assignee_id)
+            .order_by(Task.gmt_create.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def list_created_since(self, assignee_id: int, since, limit: int = 20) -> list[Task]:
+        result = await self.session.execute(
+            select(Task)
+            .where(
+                Task.is_deleted == 0,
+                Task.assignee_id == assignee_id,
+                Task.gmt_create >= since,
+            )
+            .order_by(Task.gmt_create.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())

@@ -77,3 +77,21 @@ class ProjectRepository(BaseRepository[Project]):
         self.session.add(risk)
         await self.session.flush()
         return risk
+
+    # ---------- Dashboard helpers (M6-API-07) ----------
+
+    async def count_by_owner(self, owner_id: int) -> int:
+        return await self.session.scalar(
+            select(func.count()).where(
+                Project.is_deleted == 0, Project.owner_id == owner_id
+            )
+        ) or 0
+
+    async def list_recent_by_owner(self, owner_id: int, limit: int) -> list[Project]:
+        result = await self.session.execute(
+            select(Project)
+            .where(Project.is_deleted == 0, Project.owner_id == owner_id)
+            .order_by(Project.gmt_create.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())

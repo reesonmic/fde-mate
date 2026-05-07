@@ -3,7 +3,7 @@ Task Service - CRUD + batch + history.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exceptions.biz import TaskNotFoundException, PermissionDeniedException
+from app.exceptions.biz import TaskNotFoundException, PermissionDeniedException, AIActionParamsMismatchException
 from app.exceptions.codes import BIZ_TASK_NOT_FOUND, BIZ_NO_TASK_PERMISSION, BIZ_AI_ACTION_REQUIRED
 from app.models.task import Task
 from app.repositories.task_repo import TaskRepository
@@ -83,7 +83,12 @@ class TaskService:
         if len(req.ids) > 10 and not req.action_id:
             raise PermissionDeniedException("批量操作超过10项，需先获取actionId确认")
         if req.action_id:
-            await self.action_svc.verify_action(req.action_id, user_id, "batch_update_task_status")
+            action_payload = await self.action_svc.verify_action(req.action_id, user_id, "batch_update_task_status")
+            # Verify parameter consistency - ids array must match
+            action_args = action_payload.get("args", {})
+            action_ids = action_args.get("ids", [])
+            if set(action_ids) != set(req.ids):
+                raise AIActionParamsMismatchException()
         updated = await self.repo.batch_update_status(req.ids, req.status.value, user_id)
         return {"updated": updated}
 

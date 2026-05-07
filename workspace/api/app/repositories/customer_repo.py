@@ -50,3 +50,10 @@ class CustomerRepository(BaseRepository[Customer]):
             select(Opportunity).where(Opportunity.customer_id == customer_id, Opportunity.is_deleted == 0)
         )
         return list(result.scalars().all())
+
+    # ---------- Dashboard helpers (M6-API-07) ----------
+
+    async def count_active(self) -> int:
+        return await self.session.scalar(
+            select(func.count()).where(Customer.is_deleted == 0)
+        ) or 0

@@ -24,9 +24,17 @@ graph LR
 
 ## 使用方式
 
-### 后端（自动导出）
+### 后端（导出）
 
-`api/app/main.py` 启动时通过 `app.openapi()` 生成，CI 中触发 `scripts/export-openapi.sh` 写入本目录。
+实际的导出脚本位于 `workspace/scripts/export_openapi.py`：
+
+```bash
+cd workspace
+python scripts/export_openapi.py
+# -> 写入 shared-protos/openapi/api.json
+```
+
+脚本通过 `app.openapi()` 直接从 `api/app/main.py` 取最新 schema，不需要拉起 HTTP 服务。
 
 ### 前端（生成类型）
 
@@ -36,9 +44,15 @@ npm run gen:types
 # 内部执行：openapi-typescript ../shared-protos/openapi/api.json -o src/types/api.d.ts
 ```
 
-## CI 校验
+## 推荐工作流
 
-CI 中执行 `scripts/ci/check-openapi-sync.sh`：
-- 拉起 api 服务，重新导出 openapi.json
-- 与本目录现有 api.json diff
-- 若有差异 → PR 必须同步更新前端类型，否则失败
+1. 后端开发新增/修改路由后，本地执行 `python scripts/export_openapi.py` 重新导出
+2. 提交 PR 时同时提交 `shared-protos/openapi/api.json` 与 `web/src/types/api.d.ts`
+3. Code Review 时通过 diff 即可看到协议变化
+
+## CI 校验（建议）
+
+在 CI 中加入：
+- 重新执行 `scripts/export_openapi.py`
+- `git diff --exit-code shared-protos/openapi/api.json` 校验是否同步
+- 若有差异 → 提示 PR 必须同步更新

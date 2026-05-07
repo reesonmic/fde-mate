@@ -3,6 +3,15 @@ AI Orchestrator - FastAPI application entry point.
 
 Provides HTTP endpoints for the AI orchestration service.
 Called by the `api/` service - never accessed directly by `web/`.
+
+Architectural notes:
+- Two-step write actions (preview-action / execute-action) are owned by the
+  api layer's `ActionService`. Endpoints kept here are thin proxies that
+  redirect callers to the api layer (M6-AI-01 / M6-AI-02).
+- All non-SSE errors raise BizException / SystemException; HTTP responses
+  are produced uniformly by `app.exceptions.handlers` (M6-AI-03).
+- SSE error frames carry a stable `code` field so the frontend can
+  classify failures (M6-AI-04).
 """
 import json
 import time
@@ -19,6 +28,17 @@ from app.safety.input_guard import get_input_guard
 from app.audit.logger import get_audit_logger, create_entry
 from app.routing.router import get_router
 from app.tools import get_all_tool_definitions
+from app.exceptions import setup_exception_handlers
+from app.exceptions.biz import (
+    AIInvalidParamsException,
+    AIRagSearchException,
+)
+from app.exceptions.codes import (
+    BIZ_AI_PROMPT_INJECTION,
+    BIZ_AI_ACTION_REQUIRED,
+    BIZ_AI_RAG_INDEX_FAILED,
+    SYS_INTERNAL_ERROR,
+)
 
 app = FastAPI(
     title="FDE AI Orchestrator",
@@ -26,8 +46,20 @@ app = FastAPI(
     docs_url="/docs",
 )
 
+# Register unified exception handlers (M6-AI-03)
+setup_exception_handlers(app)
+
 _input_guard = get_input_guard()
 _audit = get_audit_logger()
+
+
+def _sse_error_frame(code: int, message: str) -> str:
+    """Build an SSE error frame with a stable error code (M6-AI-04)."""
+    payload = json.dumps(
+        {"type": "error", "code": code, "message": message},
+        ensure_ascii=False,
+    )
+    return f"data: {payload}\n\n"
 
 
 class PreviewActionRequest(BaseModel):
@@ -37,6 +69,11 @@ class PreviewActionRequest(BaseModel):
 
 class ExecuteActionRequest(BaseModel):
     actionId: str = Field(..., min_length=1)
+
+class RagIndexRequest(BaseModel):
+    docId: str = Field(..., min_length=1, max_length=200)
+    content: str = Field(..., min_length=1, max_length=200_000)
+    metadata: dict = Field(default_factory=dict)
 
 
 @app.get("/health")
@@ -50,7 +87,7 @@ async def health() -> dict:
 
 
 @app.post("/ai/chat")
-async def chat(req: ChatRequest) -> StreamingResponse:
+async def chat(request: Request, req: ChatRequest) -> StreamingResponse:
     """
     SSE chat endpoint with safety guard and audit logging.
     Streams AI responses token by token.
@@ -70,8 +107,12 @@ async def chat(req: ChatRequest) -> StreamingResponse:
         _audit.log_safety_block(audit_entry)
 
         async def blocked_stream():
-            yield "data: {\"type\": \"error\", \"message\": \"请求包含不安全的输入，已被系统拦截\"}\n\n"
+            yield _sse_error_frame(
+                BIZ_AI_PROMPT_INJECTION,
+                "请求包含不安全的输入，已被系统拦截",
+            )
             yield "data: [DONE]\n\n"
+
         return StreamingResponse(
             blocked_stream(),
             media_type="text/event-stream",
@@ -86,7 +127,7 @@ async def chat(req: ChatRequest) -> StreamingResponse:
     audit_entry.input_preview = req.message[:200]
     start_time = time.time()
 
-    async def event_stream(request: Request) -> AsyncIterator[str]:
+    async def event_stream() -> AsyncIterator[str]:
         state: AgentState = {
             "messages": [{"role": "user", "content": req.message}],
             "assistant_id": req.assistantId,
@@ -105,9 +146,12 @@ async def chat(req: ChatRequest) -> StreamingResponse:
                 full_response += chunk
                 data = ChatTokenChunk(delta=chunk).model_dump_json()
                 yield f"data: {data}\n\n"
-        except Exception as e:
-            audit_entry.error = str(e)
-            yield "data: {\"type\": \"error\", \"code\": \"BIZ_AI_INTERNAL_ERROR\", \"message\": \"AI 处理失败，请稍后重试\"}\n\n"
+        except Exception as exc:  # noqa: BLE001
+            audit_entry.error = str(exc)
+            yield _sse_error_frame(
+                SYS_INTERNAL_ERROR,
+                "AI 处理失败，请稍后重试",
+            )
 
         # Audit log
         audit_entry.output_preview = full_response[:200]
@@ -118,7 +162,7 @@ async def chat(req: ChatRequest) -> StreamingResponse:
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
-        event_stream(Request),
+        event_stream(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -134,72 +178,129 @@ async def list_tools(agent: str | None = None) -> dict:
     return {"tools": get_all_tool_definitions(agent)}
 
 
-@app.post("/ai/preview-action")
+# ---------- Two-step write actions (DEPRECATED here; owned by api layer) ----------
+#
+# M6-AI-01 / M6-AI-02:
+# The actionId lifecycle (Redis cache, user/tool integrity check, TTL,
+# audit binding) is owned by `api/app/services/action_service.py`.
+# Keeping real implementations here would create two divergent sources of
+# truth. These endpoints intentionally fail fast with a clear redirection
+# message so any legacy direct caller is forced to migrate to:
+#     POST /api/v1/copilot/preview-action
+#     POST /api/v1/copilot/execute-action
+
+@app.post("/ai/preview-action", deprecated=True)
 async def preview_action(req: PreviewActionRequest) -> dict:
-    """Preview an AI action before execution."""
-    tools = get_all_tool_definitions()
-    return {
-        "actionId": "preview-placeholder",
-        "title": f"执行 {req.toolName}",
-        "severity": "low",
-        "preview": {"status": "preview", "toolName": req.toolName, "args": req.args},
-        "availableTools": len(tools),
-    }
+    """[DEPRECATED] actionId lifecycle is owned by api layer ActionService."""
+    raise AIInvalidParamsException(
+        message=(
+            "ai-orchestrator no longer issues actionId. "
+            "Call POST /api/v1/copilot/preview-action on the api service instead."
+        ),
+        details={
+            "redirect": "/api/v1/copilot/preview-action",
+            "toolName": req.toolName,
+        },
+    )
 
 
-@app.post("/ai/execute-action")
+@app.post("/ai/execute-action", deprecated=True)
 async def execute_action(req: ExecuteActionRequest) -> dict:
-    """Execute a previously previewed action via actionId."""
-    import redis.asyncio as redis
-    from app.exceptions.codes import BIZ_AI_ACTION_NOT_FOUND, BIZ_AI_ACTION_EXPIRED
-
-    try:
-        r = redis.Redis(url=getattr(settings, "redis_url", "redis://localhost:6379/1"))
-        action_data = await r.get(f"action:{req.actionId}")
-        if action_data is None:
-            await r.aclose()
-            from fastapi import HTTPException
-            raise HTTPException(status_code=404, detail="Action not found or expired")
-
-        action_info = json.loads(action_data)
-        await r.delete(f"action:{req.actionId}")
-        await r.aclose()
-
-        tool_name = action_info.get("tool_name", "")
-        tool_args = action_info.get("args", {})
-
-        from app.tools import get_tool_registry
-        registry = get_tool_registry()
-        result = await registry.execute(tool_name, tool_args)
-        return {"success": True, "result": result}
-    except HTTPException:
-        raise
-    except Exception as e:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"Action execution failed: {e}")
+    """[DEPRECATED] actionId execution is owned by api layer ActionService."""
+    raise AIInvalidParamsException(
+        message=(
+            "ai-orchestrator no longer executes actions. "
+            "Call POST /api/v1/copilot/execute-action on the api service instead."
+        ),
+        details={
+            "code": BIZ_AI_ACTION_REQUIRED,
+            "redirect": "/api/v1/copilot/execute-action",
+            "actionId": req.actionId,
+        },
+    )
 
 
 @app.get("/ai/rag/search")
 async def rag_search(query: str, top_k: int = 5) -> dict:
     """RAG search endpoint - combines Milvus + ES hybrid retrieval."""
     if not query or len(query) > 2000:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="query must be 1-2000 characters")
+        raise AIInvalidParamsException("query must be 1-2000 characters")
     if top_k < 1 or top_k > 50:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="top_k must be 1-50")
+        raise AIInvalidParamsException("top_k must be 1-50")
 
     from app.rag.retriever import get_retriever
+
     try:
         retriever = get_retriever()
         result = await retriever.retrieve(query, top_k=top_k)
-        return {
-            "results": [
-                {"id": d.id, "content": d.content[:200], "score": d.score, "metadata": d.metadata}
-                for d in result.documents
-            ],
-            "source": result.source,
-        }
-    except Exception as e:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"RAG search failed: {e}")
+    except Exception as exc:  # noqa: BLE001 - convert to domain exception
+        raise AIRagSearchException(
+            message="RAG retrieval failed",
+            details={"reason": str(exc)},
+        ) from exc
+
+    return {
+        "results": [
+            {"id": d.id, "content": d.content[:200], "score": d.score, "metadata": d.metadata}
+            for d in result.documents
+        ],
+        "source": result.source,
+    }
+
+
+# ---------- RAG indexing (M6-AI-05) ----------
+
+@app.post("/ai/rag/index")
+async def rag_index(req: RagIndexRequest) -> dict:
+    """
+    Index a document into the RAG store (Milvus + ES).
+
+    Called by api layer Celery task `tasks.rag_index` after file upload
+    or knowledge base content update.
+    """
+    from app.rag.retriever import get_retriever
+
+    try:
+        retriever = get_retriever()
+        await retriever.index(
+            doc_id=req.docId,
+            content=req.content,
+            metadata=req.metadata,
+        )
+    except AttributeError as exc:
+        raise AIRagSearchException(
+            message="RAG retriever does not expose index()",
+            details={"reason": str(exc), "code": BIZ_AI_RAG_INDEX_FAILED},
+        ) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise AIRagSearchException(
+            message="RAG index failed",
+            details={"reason": str(exc), "code": BIZ_AI_RAG_INDEX_FAILED},
+        ) from exc
+
+    return {"success": True, "docId": req.docId}
+
+
+@app.delete("/ai/rag/{doc_id}")
+async def rag_delete(doc_id: str) -> dict:
+    """Remove a document from the RAG store (used by file delete flow)."""
+    if not doc_id or len(doc_id) > 200:
+        raise AIInvalidParamsException("doc_id must be 1-200 characters")
+
+    from app.rag.retriever import get_retriever
+
+    try:
+        retriever = get_retriever()
+        await retriever.delete(doc_id=doc_id)
+    except AttributeError as exc:
+        raise AIRagSearchException(
+            message="RAG retriever does not expose delete()",
+            details={"reason": str(exc), "code": BIZ_AI_RAG_INDEX_FAILED},
+        ) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise AIRagSearchException(
+            message="RAG delete failed",
+            details={"reason": str(exc), "code": BIZ_AI_RAG_INDEX_FAILED},
+        ) from exc
+
+    return {"success": True, "docId": doc_id}

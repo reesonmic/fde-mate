@@ -6,7 +6,7 @@ from typing import AsyncIterator, Literal, TypedDict
 
 from app.llm.provider import get_llm
 from app.orchestrator.prompts import get_system_prompt
-from app.tools import get_tools_for_agent, get_agent_name
+from app.tools import get_tools_for_agent
 
 logger = logging.getLogger(__name__)
 

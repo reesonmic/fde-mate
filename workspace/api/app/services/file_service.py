@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.settings import settings
-from app.exceptions.biz import FileNotFoundException, PermissionDeniedException
+from app.exceptions.biz import FileNotFoundException, PermissionDeniedException, FileTooLargeException
 from app.models.file import FileMeta
 from app.repositories.file_repo import FileRepository
 from app.schemas.file import (
@@ -66,7 +66,7 @@ class FileService:
         if used + req.file_size > QUOTA_LIMIT:
             raise PermissionDeniedException("存储配额已满")
         if req.file_size > MAX_FILE_SIZE:
-            raise PermissionDeniedException("文件超过大小限制")
+            raise FileTooLargeException(max_size_mb=100)
 
         ext = req.file_name.rsplit(".", 1)[-1] if "." in req.file_name else ""
         oss_key = f"uploads/{user_id}/{uuid.uuid4().hex}.{ext}"

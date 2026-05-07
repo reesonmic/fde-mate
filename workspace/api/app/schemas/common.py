@@ -19,7 +19,7 @@ class ApiResponse(BaseModel, Generic[T]):
 
 class PageRequest(BaseModel):
     page: int = Field(1, ge=1)
-    size: int = Field(20, ge=1, le=200)
+    size: int = Field(20, ge=1, le=100)
 
 
 class PageResponse(BaseModel, Generic[T]):

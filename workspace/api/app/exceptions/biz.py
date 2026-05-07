@@ -98,6 +98,17 @@ class FileNotFoundException(NotFoundException):
         super().__init__("File")
 
 
+class FileTooLargeException(BizException):
+    """File too large exception - returns HTTP 413."""
+
+    def __init__(self, max_size_mb: int = 100):
+        super().__init__(
+            BIZ_FILE_SIZE_EXCEEDED,
+            f"File size exceeds maximum limit of {max_size_mb}MB",
+            http_status=413
+        )
+
+
 class AIActionNotFoundException(BizException):
     """AI action not found exception."""
 
@@ -131,6 +142,13 @@ class AIActionCancelledException(BizException):
 
     def __init__(self):
         super().__init__(BIZ_AI_ACTION_CANCELLED, "Action cancelled")
+
+
+class AIActionParamsMismatchException(BizException):
+    """AI action parameters mismatch exception."""
+
+    def __init__(self):
+        super().__init__(BIZ_AI_ACTION_PARAMS_MISMATCH, "Action parameters mismatch")
 
 
 class SystemException(Exception):
