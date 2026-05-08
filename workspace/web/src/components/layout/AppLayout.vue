@@ -1,16 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUiStore } from '@stores/ui'
+import { useCopilotStore } from '@stores/copilot'
 import AppHeader from './AppHeader.vue'
 import AppNav from './AppNav.vue'
 import CopilotPanel from '@components/copilot/CopilotPanel.vue'
 
 const route = useRoute()
 const ui = useUiStore()
+const copilotStore = useCopilotStore()
 
 const showCopilot = computed(() => ui.copilotOpen && route.meta.layout !== 'chat-only')
-const copilotKey = computed(() => (route.meta.copilot as string) || 'workspace')
+const copilotKey = computed(() => (route.meta.copilot as string) || 'chat')
+
+// 监听路由变化，自动切换助手
+watch(
+  () => route.path,
+  () => {
+    // 路由变化时，助手类型自动切换，无需手动操作
+    // CopilotPanel 会通过 props.assistantKey 自动响应
+  }
+)
 </script>
 
 <template>

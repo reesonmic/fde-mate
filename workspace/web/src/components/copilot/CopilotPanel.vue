@@ -1,33 +1,34 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Tabs, Button } from 'ant-design-vue'
+import { computed, watch } from 'vue'
+import { Button } from 'ant-design-vue'
 import MessageList from './MessageList.vue'
 import ChatInput from './ChatInput.vue'
 import { useCopilotStore } from '@/stores/copilot'
 import type { TaskDTO, ProjectDTO, CustomerDTO, FileDTO, UserDTO } from '@/types/business'
+import { getAssistantConfig } from '@/config/assistants'
 
 type MentionItem = TaskDTO | ProjectDTO | CustomerDTO | FileDTO | UserDTO
 
+const props = defineProps<{
+  assistantKey: string
+}>()
+
 const copilotStore = useCopilotStore()
-const activeTab = ref('task')
 
-const assistants = [
-  { key: 'task', name: 'T助手', description: '任务管理助手' },
-  { key: 'project', name: 'P助手', description: '项目助手' },
-  { key: 'coach', name: 'C助手', description: '教练助手' },
-  { key: 'file', name: 'F助手', description: '文件助手' },
-]
+// 当前助手配置
+const assistantConfig = computed(() => getAssistantConfig(props.assistantKey))
 
+// 当前助手的消息
 const currentMessages = computed(() => {
-  return copilotStore.getMessages(activeTab.value)
+  return copilotStore.getMessages(props.assistantKey)
 })
 
 const handleSend = (content: string, mentions?: MentionItem[]) => {
-  copilotStore.sendMessage(activeTab.value, content, mentions)
+  copilotStore.sendMessage(props.assistantKey, content, mentions)
 }
 
 const handleClear = () => {
-  copilotStore.clearSession(activeTab.value)
+  copilotStore.clearSession(props.assistantKey)
 }
 </script>
 
@@ -35,25 +36,25 @@ const handleClear = () => {
   <div class="copilot-panel">
     <!-- Header -->
     <div class="copilot-panel-header">
-      <Tabs v-model:activeKey="activeTab" size="small">
-        <Tabs.TabPane v-for="assistant in assistants" :key="assistant.key">
-          <template #tab>
-            <span class="copilot-tab">{{ assistant.name }}</span>
-          </template>
-        </Tabs.TabPane>
-      </Tabs>
+      <div class="copilot-header-info">
+        <div class="copilot-header-icon">{{ assistantConfig?.icon }}</div>
+        <div class="copilot-header-content">
+          <div class="copilot-header-name">{{ assistantConfig?.name }}</div>
+          <div class="copilot-header-desc">{{ assistantConfig?.description }}</div>
+        </div>
+      </div>
       <Button size="small" @click="handleClear">清空</Button>
     </div>
 
     <!-- Messages -->
     <div class="copilot-panel-body">
-      <MessageList :messages="currentMessages" :assistantType="activeTab" />
+      <MessageList :messages="currentMessages" :assistantType="assistantKey" />
     </div>
 
     <!-- Input -->
     <div class="copilot-panel-footer">
       <ChatInput
-        :assistantType="activeTab"
+        :assistantType="assistantKey"
         @send="handleSend"
       />
     </div>
@@ -71,12 +72,42 @@ const handleClear = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-fill-secondary);
 }
 
-.copilot-tab {
-  font-size: 12px;
+.copilot-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.copilot-header-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.copilot-header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.copilot-header-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.copilot-header-desc {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .copilot-panel-body {
