@@ -141,10 +141,12 @@ export interface CoachQueryParams extends PageRequest {
 
 // Copilot
 export interface CopilotRequest {
-  assistantType: string
+  assistantId: string
   message: string
-  mentions?: Array<{ type: string; id: string; label: string }>
   sessionId?: string
+  mode?: 'smart' | 'creative' | 'rigorous'
+  context?: Record<string, unknown>
+  mentions?: Array<{ type: string; id: string; label: string }>
 }
 
 export interface ActionPreview {

@@ -88,7 +88,14 @@ class CopilotService:
         return {"deleted": deleted}
 
     async def _save_user_message(self, req: ChatRequest, user_id: int):
-        session_id: int | None = int(req.session_id) if req.session_id else None
+        # Try to parse session_id as int, ignore if it's a string like 'chat-session-xxx'
+        session_id: int | None = None
+        if req.session_id:
+            try:
+                session_id = int(req.session_id)
+            except (ValueError, TypeError):
+                session_id = None
+        
         if not session_id:
             new_session = await self.session_repo.create_session(
                 user_id=user_id,
@@ -102,7 +109,14 @@ class CopilotService:
         )
 
     async def _save_assistant_message(self, req: ChatRequest, user_id: int, content: str):
-        session_id = int(req.session_id) if req.session_id else None
+        # Try to parse session_id as int, ignore if it's a string
+        session_id: int | None = None
+        if req.session_id:
+            try:
+                session_id = int(req.session_id)
+            except (ValueError, TypeError):
+                session_id = None
+        
         if not session_id:
             return
         await self.message_repo.append(
