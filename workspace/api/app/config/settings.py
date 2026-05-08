@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # Auth
     jwt_secret_key: str = ""
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 60
+    jwt_expire_minutes: int = 10080  # 7 days = 7 * 24 * 60 = 10080 minutes
 
     # Celery
     celery_broker_url: str = "redis://localhost:6379/1"

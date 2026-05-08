@@ -24,6 +24,16 @@ export function setupAxiosInterceptors() {
     (resp) => {
       const { code, data, message: msg } = resp.data
       if (code !== undefined && code !== 0) {
+        // Handle business-level authentication errors (code 2001, 2002)
+        if (code === 2001 || code === 2002) {
+          // Authentication failed or token expired
+          const auth = useAuthStore()
+          auth.logout()
+          // Redirect to login page with current path as redirect query
+          const currentPath = window.location.pathname + window.location.search
+          router.push(`/login?redirect=${encodeURIComponent(currentPath)}`)
+          return Promise.reject({ code, message: msg })
+        }
         return Promise.reject({ code, message: msg })
       }
       // If API wraps response in {code, data}, unwrap it; otherwise return resp.data directly
