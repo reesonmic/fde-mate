@@ -57,7 +57,11 @@ class TaskService:
             tags=payload.tags,
             creator_id=user_id,
         )
-        await self.repo.add_history(task.id, user_id, "create", after=payload.model_dump(exclude_none=True))
+        # Convert datetime to string for JSON serialization
+        history_data = payload.model_dump(exclude_none=True)
+        if history_data.get("due_at") and hasattr(history_data["due_at"], "isoformat"):
+            history_data["due_at"] = history_data["due_at"].isoformat()
+        await self.repo.add_history(task.id, user_id, "create", after=history_data)
         return TaskDTO.model_validate(task, from_attributes=True)
 
     async def update_task(self, task_id: int, payload: TaskUpdate, user_id: int) -> TaskDTO:
@@ -65,10 +69,20 @@ class TaskService:
         if not task or task.is_deleted:
             raise TaskNotFoundException()
         await self._check_write_access(task, user_id)
-        old = TaskDTO.model_validate(task, from_attributes=True).model_dump()
+        old_data = TaskDTO.model_validate(task, from_attributes=True).model_dump()
+        # Convert datetime to string for JSON serialization
+        if old_data.get("due_at") and hasattr(old_data["due_at"], "isoformat"):
+            old_data["due_at"] = old_data["due_at"].isoformat()
+        if old_data.get("gmt_create") and hasattr(old_data["gmt_create"], "isoformat"):
+            old_data["gmt_create"] = old_data["gmt_create"].isoformat()
+        if old_data.get("gmt_modified") and hasattr(old_data["gmt_modified"], "isoformat"):
+            old_data["gmt_modified"] = old_data["gmt_modified"].isoformat()
         update_data = payload.model_dump(exclude_none=True)
         updated = await self.repo.update_task(task, **update_data)
-        await self.repo.add_history(task_id, user_id, "update", before=old, after=update_data)
+        # Convert datetime in update_data for JSON serialization
+        if update_data.get("due_at") and hasattr(update_data["due_at"], "isoformat"):
+            update_data["due_at"] = update_data["due_at"].isoformat()
+        await self.repo.add_history(task_id, user_id, "update", before=old_data, after=update_data)
         return TaskDTO.model_validate(updated, from_attributes=True)
 
     async def delete_task(self, task_id: int, user_id: int) -> dict:
