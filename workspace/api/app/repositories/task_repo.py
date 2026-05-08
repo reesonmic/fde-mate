@@ -109,6 +109,16 @@ class TaskRepository(BaseRepository[Task]):
             )
         ) or 0
 
+    async def count_pending_by_assignee(self, assignee_id: int) -> int:
+        """统计待处理任务数量（状态为todo或in_progress）"""
+        return await self.session.scalar(
+            select(func.count()).where(
+                Task.is_deleted == 0,
+                Task.assignee_id == assignee_id,
+                Task.status.in_(["todo", "in_progress", "blocked"])
+            )
+        ) or 0
+
     async def list_recent_by_assignee(self, assignee_id: int, limit: int) -> list[Task]:
         result = await self.session.execute(
             select(Task)

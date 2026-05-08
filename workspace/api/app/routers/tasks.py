@@ -24,7 +24,7 @@ def get_task_service(session: AsyncSession = Depends(get_async_session)) -> Task
     return TaskService(session, repo, action_svc)
 
 
-@router.get("", response_model=dict)
+@router.get("")
 async def list_tasks(query: TaskQuery = Depends(), svc: TaskService = Depends(get_task_service), user: UserContext = Depends(current_user)):
     return await svc.list_tasks(query, user.id)
 

@@ -70,3 +70,29 @@ class RecommendationDTO(BaseModel):
     best_practices: list[BestPracticeDTO] = []
     sops: list[SopDTO] = []
     learning_paths: list[LearningPathDTO] = []
+
+
+class CategoryDTO(BaseModel):
+    """Coach分类DTO"""
+    id: int
+    name: str
+    code: str
+    description: str | None = None
+    sort_order: int = 0
+    icon: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class ExpertDTO(BaseModel):
+    """专家DTO"""
+    id: int
+    name: str
+    title: str
+    avatar: str | None = None
+    specialties: list[str] = []
+    rating: float = 0.0
+    consultation_count: int = 0
+    is_online: bool = False
+
+    model_config = {"from_attributes": True}

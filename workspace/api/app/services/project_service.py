@@ -34,10 +34,14 @@ class ProjectService:
             total=total, page=query.page, size=query.size,
         )
 
-    async def get_project(self, project_id: int) -> ProjectDTO:
+    async def get_project(self, project_id: int, user_id: int) -> ProjectDTO:
         project = await self.repo.get_with_relations(project_id)
         if not project or project.is_deleted:
             raise ProjectNotFoundException()
+        # 权限检查：只有项目成员或所有者可以查看
+        is_member = await self.repo.is_project_member(project_id, user_id)
+        if project.owner_id != user_id and not is_member:
+            raise PermissionDeniedException()
         return self._to_dto(project)
 
     async def create_project(self, payload: ProjectCreate, user_id: int) -> ProjectDTO:

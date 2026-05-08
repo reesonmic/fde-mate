@@ -56,6 +56,42 @@ async def chat(
     )
 
 
+@router.post("/query")
+async def query(
+    request: Request,
+    req: ChatRequest,
+    svc: CopilotService = Depends(get_copilot_service),
+    user: UserContext = Depends(current_user),
+):
+    """
+    Copilot查询端点 - 复用/chat的SSE流式实现
+    用于单轮问答场景，客户端可通过assistant_type指定助手类型
+    """
+    trace_id = getattr(request.state, "trace_id", "unknown")
+
+    async def event_stream():
+        try:
+            async for chunk in svc.chat_stream(req, user.id):
+                yield f"data: {json.dumps({**chunk, 'traceId': trace_id}, ensure_ascii=False)}\n\n"
+            yield "data: [DONE]\n\n"
+        except asyncio.CancelledError:
+            # Client disconnected
+            return
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e), 'traceId': trace_id})}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "X-Trace-Id": trace_id,
+        },
+    )
+
+
 @router.get("/sessions")
 async def list_sessions(svc: CopilotService = Depends(get_copilot_service), user: UserContext = Depends(current_user)):
     return await svc.list_sessions(user.id)

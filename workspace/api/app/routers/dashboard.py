@@ -31,7 +31,7 @@ async def dashboard_summary(
         "task_count": await task_repo.count_by_assignee(user.id),
         "project_count": await project_repo.count_by_owner(user.id),
         "customer_count": await customer_repo.count_active(),
-        "pending_tasks": 0,
+        "pending_tasks": await task_repo.count_pending_by_assignee(user.id),
     }
 
 
