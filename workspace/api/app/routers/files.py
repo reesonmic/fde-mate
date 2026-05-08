@@ -1,7 +1,7 @@
-"""
+"""  
 Files Router - /api/v1/files/*
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +15,9 @@ from app.schemas.file import (
 )
 
 router = APIRouter()
+
+# 文件上传大小限制：50MB
+MAX_FILE_SIZE = 50 * 1024 * 1024
 
 
 def get_file_service(session: AsyncSession = Depends(get_async_session)) -> FileService:
@@ -55,6 +58,15 @@ async def get_download_url(file_id: int, svc: FileService = Depends(get_file_ser
 
 @router.post("/upload-token", response_model=UploadTokenResponse)
 async def get_upload_token(req: UploadTokenRequest, svc: FileService = Depends(get_file_service), user: UserContext = Depends(current_user)):
+    # 校验文件大小
+    if req.file_size and req.file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail={
+                "code": 6004,
+                "message": f"文件大小超过限制（{MAX_FILE_SIZE // (1024*1024)}MB）"
+            }
+        )
     return await svc.get_upload_token(req, user.id)
 
 

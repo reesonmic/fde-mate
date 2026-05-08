@@ -5,10 +5,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.db import get_async_session
+from app.deps.redis import get_redis
 from app.deps.auth import UserContext, current_user
 from app.repositories.task_repo import TaskRepository
 from app.services.task_service import TaskService
 from app.services.action_service import ActionService
+from redis import Redis
 from app.schemas.task import (
     TaskDTO, TaskCreate, TaskUpdate, TaskQuery,
     BatchUpdateStatusRequest, BatchAssignRequest,
@@ -18,9 +20,12 @@ from app.schemas.task import (
 router = APIRouter()
 
 
-def get_task_service(session: AsyncSession = Depends(get_async_session)) -> TaskService:
+def get_task_service(
+    session: AsyncSession = Depends(get_async_session),
+    redis_client: Redis = Depends(get_redis)
+) -> TaskService:
     repo = TaskRepository(session)
-    action_svc = ActionService()
+    action_svc = ActionService(redis_client)
     return TaskService(session, repo, action_svc)
 
 

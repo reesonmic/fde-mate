@@ -103,8 +103,11 @@ const priorityLabel = (priority: string) => {
             <Statistic
               title="总任务数"
               :value="summary?.task_count ?? 0"
-              :prefix="ClockCircleOutlined"
-            />
+            >
+              <template #prefix>
+                <ClockCircleOutlined />
+              </template>
+            </Statistic>
           </Card>
         </Col>
         <Col :span="6">
@@ -113,8 +116,11 @@ const priorityLabel = (priority: string) => {
               title="已完成"
               :value="(summary?.task_count ?? 0) - (summary?.pending_tasks ?? 0)"
               :value-style="{ color: '#52c41a' }"
-              :prefix="CheckCircleOutlined"
-            />
+            >
+              <template #prefix>
+                <CheckCircleOutlined />
+              </template>
+            </Statistic>
           </Card>
         </Col>
         <Col :span="6">
@@ -122,8 +128,11 @@ const priorityLabel = (priority: string) => {
             <Statistic
               title="活跃项目"
               :value="summary?.project_count ?? 0"
-              :prefix="FolderOutlined"
-            />
+            >
+              <template #prefix>
+                <FolderOutlined />
+              </template>
+            </Statistic>
           </Card>
         </Col>
         <Col :span="6">
@@ -132,8 +141,11 @@ const priorityLabel = (priority: string) => {
               title="任务完成率"
               :value="taskCompletionRate"
               suffix="%"
-              :prefix="FileTextOutlined"
-            />
+            >
+              <template #prefix>
+                <FileTextOutlined />
+              </template>
+            </Statistic>
           </Card>
         </Col>
       </Row>

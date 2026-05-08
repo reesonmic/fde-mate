@@ -35,14 +35,28 @@ export function setupAxiosInterceptors() {
         const auth = useAuthStore()
         if (!auth.token) { router.push('/login'); return Promise.reject(err) }
         if (isRefreshing) {
-          return new Promise((resolve) => pendingQueue.push((t) => {
-            err.config.headers.Authorization = `Bearer ${t}`
-            resolve(http(err.config))
-          }))
+          return new Promise((resolve, reject) => {
+            // Add 30s timeout for pending requests
+            const timeout = setTimeout(() => {
+              reject(new Error('Token refresh timeout'))
+            }, 30000)
+            
+            pendingQueue.push((t) => {
+              clearTimeout(timeout)
+              err.config.headers.Authorization = `Bearer ${t}`
+              resolve(http(err.config))
+            })
+          })
         }
         isRefreshing = true
         try {
-          await auth.refresh()
+          // Add 30s timeout for token refresh
+          const refreshPromise = auth.refresh()
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('刷新超时')), 30000)
+          )
+          await Promise.race([refreshPromise, timeoutPromise])
+          
           pendingQueue.forEach((cb) => cb(auth.token!))
           pendingQueue = []
           err.config.headers.Authorization = `Bearer ${auth.token}`

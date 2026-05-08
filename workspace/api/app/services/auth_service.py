@@ -20,17 +20,22 @@ class AuthService:
         self.session = session
 
     async def login(self, req: LoginRequest) -> TokenPair:
+        identifier = req.get_identifier()
+        if not identifier:
+            raise AuthException("请输入用户名或邮箱")
+        
+        # Try to find user by email or username
         result = await self.session.execute(
-            select(User).where(User.email == req.username, User.is_deleted == 0)
+            select(User).where(
+                (User.email == identifier) | (User.name == identifier),
+                User.is_deleted == 0
+            )
         )
         user = result.scalar_one_or_none()
-        if not user:
-            result2 = await self.session.execute(
-                select(User).where(User.name == req.username, User.is_deleted == 0)
-            )
-            user = result2.scalar_one_or_none()
+        
         if not user or not bcrypt.checkpw(req.password.get_secret_value().encode(), user.password_hash.encode()):
             raise AuthException("用户名或密码错误")
+        
         return await self._create_token_pair(user)
 
     async def refresh(self, refresh_token: str) -> TokenPair:

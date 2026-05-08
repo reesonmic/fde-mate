@@ -8,10 +8,12 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.db import get_async_session
+from app.deps.redis import get_redis
 from app.schemas.copilot import ChatRequest, PreviewActionRequest, ExecuteActionRequest
 from app.services.copilot_service import CopilotService
 from app.services.action_service import ActionService
 from app.deps.auth import UserContext, current_user
+from redis import Redis
 
 router = APIRouter()
 
@@ -20,8 +22,8 @@ def get_copilot_service(session: AsyncSession = Depends(get_async_session)) -> C
     return CopilotService(session)
 
 
-def get_action_service() -> ActionService:
-    return ActionService()
+def get_action_service(redis_client: Redis = Depends(get_redis)) -> ActionService:
+    return ActionService(redis_client)
 
 
 @router.post("/chat")
@@ -34,16 +36,22 @@ async def chat(
     trace_id = getattr(request.state, "trace_id", "unknown")
 
     async def event_stream():
+        import asyncio
+        
+        last_activity = asyncio.get_event_loop().time()
+        
         try:
             async for chunk in svc.chat_stream(req, user.id):
                 yield f"data: {json.dumps({**chunk, 'traceId': trace_id}, ensure_ascii=False)}\n\n"
+                last_activity = asyncio.get_event_loop().time()
             yield "data: [DONE]\n\n"
         except asyncio.CancelledError:
             # Client disconnected
             return
         except Exception as e:
             yield f"data: {json.dumps({'type': 'error', 'message': str(e), 'traceId': trace_id})}\n\n"
-
+    
+    # 添加心跳 headers
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
@@ -52,6 +60,7 @@ async def chat(
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
             "X-Trace-Id": trace_id,
+            "X-Heartbeat-Interval": "15",  # 提示客户端心跳间隔
         },
     )
 
