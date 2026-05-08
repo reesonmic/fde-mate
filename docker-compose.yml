@@ -9,10 +9,13 @@ services:
       dockerfile: Dockerfile
     image: fde-mate-api:latest
     container_name: fde-mate-api
+    ports:
+      - "8080:8080"
     environment:
       - DATABASE_URL=mysql+pymysql://fde_user:Fde%402026work@shared-mysql:3306/fde_workbench
       - REDIS_URL=redis://shared-redis:6379/0
       - JWT_SECRET_KEY=fde-mate-jwt-secret-key-2026-secure-32chars
+      - AI_ORCHESTRATOR_URL=http://host.docker.internal:8090
     networks:
       - products-shared
     healthcheck:

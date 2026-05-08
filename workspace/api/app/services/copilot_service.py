@@ -23,6 +23,7 @@ class CopilotService:
         await self._save_user_message(req, user_id)
 
         # Forward to ai-orchestrator
+        full_response = []
         async with httpx.AsyncClient(timeout=settings.ai_orchestrator_timeout) as client:
             try:
                 async with client.stream(
@@ -31,7 +32,6 @@ class CopilotService:
                     json={**req.model_dump(by_alias=True), "userId": user_id},
                     headers={"Content-Type": "application/json"},
                 ) as upstream:
-                    full_response = []
                     async for line in upstream.aiter_lines():
                         if not line.startswith("data: "):
                             continue
