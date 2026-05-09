@@ -12,7 +12,10 @@ class ProjectRepository(BaseRepository[Project]):
     async def search(self, keyword: str | None = None, phase: list[str] | None = None,
                      owner_id: int | None = None, viewer_id: int | None = None,
                      page: int = 1, size: int = 20) -> tuple[list[Project], int]:
-        stmt = select(Project).where(Project.is_deleted == 0)
+        from sqlalchemy.orm import joinedload
+        
+        # 使用 joinedload 预加载 owner，避免懒加载导致 MissingGreenlet 错误
+        stmt = select(Project).where(Project.is_deleted == 0).options(joinedload(Project.owner))
 
         if viewer_id:
             member_sub = select(ProjectMember.project_id).where(ProjectMember.user_id == viewer_id)
@@ -33,14 +36,21 @@ class ProjectRepository(BaseRepository[Project]):
         stmt = stmt.order_by(Project.gmt_create.desc())
         stmt = stmt.offset((page - 1) * size).limit(size)
         result = await self.session.execute(stmt)
-        return list(result.scalars().all()), total
+        # 使用 unique() 处理 joinedload 可能产生的重复行
+        return list(result.scalars().unique().all()), total
 
     async def get_with_relations(self, project_id: int) -> Project | None:
-        project = await self.get(project_id)
-        if project:
-            # 加载所有 relationship，包括 owner
-            await self.session.refresh(project, ["owner", "members", "milestones", "risks"])
-        return project
+        from sqlalchemy.orm import joinedload
+        
+        # 使用 joinedload 预加载所有 relationship，避免懒加载
+        stmt = select(Project).where(Project.id == project_id).options(
+            joinedload(Project.owner),
+            joinedload(Project.members),
+            joinedload(Project.milestones),
+            joinedload(Project.risks)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().unique().one_or_none()
 
     async def add_member(self, project_id: int, user_id: int, role: str) -> ProjectMember:
         member = ProjectMember(project_id=project_id, user_id=user_id, role=role)
