@@ -14,8 +14,13 @@ class ProjectRepository(BaseRepository[Project]):
                      page: int = 1, size: int = 20) -> tuple[list[Project], int]:
         from sqlalchemy.orm import joinedload
         
-        # 使用 joinedload 预加载 owner，避免懒加载导致 MissingGreenlet 错误
-        stmt = select(Project).where(Project.is_deleted == 0).options(joinedload(Project.owner))
+        # 使用 joinedload 预加载所有 relationship，避免懒加载导致 MissingGreenlet 错误
+        stmt = select(Project).where(Project.is_deleted == 0).options(
+            joinedload(Project.owner),
+            joinedload(Project.members),
+            joinedload(Project.milestones),
+            joinedload(Project.risks),
+        )
 
         if viewer_id:
             member_sub = select(ProjectMember.project_id).where(ProjectMember.user_id == viewer_id)
