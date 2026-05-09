@@ -19,6 +19,12 @@ export function openSse(options: OpenSseOptions): AbortController {
   const { url, body, onMessage, onDone, onError } = options
   const controller = new AbortController()
 
+  // 设置 120 秒超时（与后端 ai_orchestrator_timeout 一致）
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+    onError?.(new Error('SSE connection timeout after 120 seconds'))
+  }, 120000)
+
   const token = localStorage.getItem('access_token')
 
   fetch(`/api/v1${url}`, {
@@ -56,6 +62,7 @@ export function openSse(options: OpenSseOptions): AbortController {
 
           const data = trimmed.slice(6)
           if (data === '[DONE]') {
+            clearTimeout(timeoutId)
             onDone?.()
             return
           }
@@ -67,9 +74,11 @@ export function openSse(options: OpenSseOptions): AbortController {
           }
         }
       }
+      clearTimeout(timeoutId)
       onDone?.()
     })
     .catch((err: Error) => {
+      clearTimeout(timeoutId)
       if (err.name !== 'AbortError') {
         onError?.(err)
       }

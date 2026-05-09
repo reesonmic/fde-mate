@@ -38,7 +38,8 @@ class ProjectRepository(BaseRepository[Project]):
     async def get_with_relations(self, project_id: int) -> Project | None:
         project = await self.get(project_id)
         if project:
-            await self.session.refresh(project, ["members", "milestones", "risks"])
+            # 加载所有 relationship，包括 owner
+            await self.session.refresh(project, ["owner", "members", "milestones", "risks"])
         return project
 
     async def add_member(self, project_id: int, user_id: int, role: str) -> ProjectMember:

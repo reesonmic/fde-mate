@@ -62,6 +62,7 @@ class ProjectService:
         # 添加创建者为项目成员
         await self.repo.add_member(project.id, owner_id, "owner")
         
+        # 在 session 关闭前获取完整信息（包括 owner）
         full = await self.repo.get_with_relations(project.id)
         return self._to_dto(full)
 
