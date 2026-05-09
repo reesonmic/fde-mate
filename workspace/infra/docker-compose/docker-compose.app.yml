@@ -10,13 +10,13 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DATABASE_URL: mysql+aiomysql://root:20260227@172.17.0.2:3306/fde_workbench
-      REDIS_URL: redis://172.17.0.3:6379/0
+      DATABASE_URL: mysql+aiomysql://root:20260227@mysql-8.0:3306/fde_workbench
+      REDIS_URL: redis://redis:6379/0
       ES_URL: ""
       MILVUS_HOST: ""
       MILVUS_PORT: "0"
-      AI_ORCHESTRATOR_URL: http://ai-orchestrator:8090
-      JWT_SECRET_KEY: fde-workbench-dev-jwt-secret-key-2026
+      AI_ORCHESTRATOR_URL: http://host.docker.internal:8090
+      JWT_SECRET_KEY: fde-mate-jwt-secret-key-2026-secure-32chars
       LLM_PROVIDER: mock
     networks:
       - products-shared

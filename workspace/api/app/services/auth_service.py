@@ -43,8 +43,11 @@ class AuthService:
             payload = jwt.decode(refresh_token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
             if payload.get("type") != "refresh":
                 raise TokenInvalidException()
-            user_id = int(payload.get("sub"))
-        except JWTError:
+            sub = payload.get("sub")
+            if sub is None:
+                raise TokenInvalidException()
+            user_id = int(sub)
+        except (JWTError, ValueError, TypeError):
             raise TokenInvalidException()
 
         result = await self.session.execute(select(User).where(User.id == user_id, User.is_deleted == 0))
@@ -58,8 +61,11 @@ class AuthService:
             payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
             if payload.get("type") != "access":
                 raise TokenInvalidException()
-            user_id = int(payload.get("sub"))
-        except JWTError:
+            sub = payload.get("sub")
+            if sub is None:
+                raise TokenInvalidException()
+            user_id = int(sub)
+        except (JWTError, ValueError, TypeError):
             raise TokenInvalidException()
 
         result = await self.session.execute(select(User).where(User.id == user_id, User.is_deleted == 0))
