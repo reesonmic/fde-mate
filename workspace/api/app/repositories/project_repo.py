@@ -63,6 +63,17 @@ class ProjectRepository(BaseRepository[Project]):
         await self.session.flush()
         return member
 
+    async def is_project_member(self, project_id: int, user_id: int) -> bool:
+        """检查用户是否是项目成员"""
+        from sqlalchemy import func
+        result = await self.session.execute(
+            select(func.count()).where(
+                ProjectMember.project_id == project_id,
+                ProjectMember.user_id == user_id,
+            )
+        )
+        return (result.scalar() or 0) > 0
+
     async def remove_member(self, project_id: int, user_id: int) -> bool:
         result = await self.session.execute(
             select(ProjectMember).where(
