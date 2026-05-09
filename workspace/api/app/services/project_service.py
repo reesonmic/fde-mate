@@ -45,17 +45,23 @@ class ProjectService:
         return self._to_dto(project)
 
     async def create_project(self, payload: ProjectCreate, user_id: int) -> ProjectDTO:
-        async with self.session.begin_nested():
-            project = await self.repo.create(
-                name=payload.name,
-                customer_id=payload.customer_id,
-                phase=payload.phase.value,
-                owner_id=payload.owner_id,
-                start_at=payload.start_at,
-                end_at=payload.end_at,
-            )
-            await self.repo.add_member(project.id, payload.owner_id, "owner")
-            await self.session.flush()
+        # 使用当前用户作为 owner（如果未指定）
+        owner_id = payload.owner_id or user_id
+        # 使用当前时间作为 start_at（如果未指定）
+        start_at = payload.start_at or datetime.now()
+
+        # 创建项目
+        project = await self.repo.create(
+            name=payload.name,
+            customer_id=payload.customer_id,
+            phase=payload.phase.value,
+            owner_id=owner_id,
+            start_at=start_at,
+            end_at=payload.end_at,
+        )
+        # 添加创建者为项目成员
+        await self.repo.add_member(project.id, owner_id, "owner")
+        
         full = await self.repo.get_with_relations(project.id)
         return self._to_dto(full)
 

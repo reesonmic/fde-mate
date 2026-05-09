@@ -72,8 +72,8 @@ class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     customer_id: int | None = None
     phase: ProjectPhase = ProjectPhase.init
-    owner_id: int
-    start_at: datetime
+    owner_id: int | None = None  # 可选，默认使用当前用户
+    start_at: datetime | None = None  # 可选，默认使用当前时间
     end_at: datetime | None = None
 
 
