@@ -88,10 +88,13 @@ class ProjectRepository(BaseRepository[Project]):
         return False
 
     async def get_members(self, project_id: int) -> list[ProjectMember]:
+        from sqlalchemy.orm import joinedload
         result = await self.session.execute(
-            select(ProjectMember).where(ProjectMember.project_id == project_id)
+            select(ProjectMember)
+            .where(ProjectMember.project_id == project_id)
+            .options(joinedload(ProjectMember.user))
         )
-        return list(result.scalars().all())
+        return list(result.scalars().unique().all())
 
     async def add_milestone(self, project_id: int, title: str, due_at, done: bool = False) -> Milestone:
         ms = Milestone(project_id=project_id, title=title, due_at=due_at, done=int(done))
