@@ -66,6 +66,11 @@ async def get_health(project_id: int, svc: ProjectService = Depends(get_project_
     return await svc.get_health(project_id, user.id)
 
 
+@router.get("/{project_id}/risks", response_model=list[RiskDTO])
+async def get_risks(project_id: int, svc: ProjectService = Depends(get_project_service), user: UserContext = Depends(current_user)):
+    return await svc.get_risks(project_id, user.id)
+
+
 @router.post("/{project_id}/risks", response_model=RiskDTO)
 async def add_risk(project_id: int, payload: RiskCreate, svc: ProjectService = Depends(get_project_service), user: UserContext = Depends(current_user)):
     return await svc.add_risk(project_id, payload, user.id)

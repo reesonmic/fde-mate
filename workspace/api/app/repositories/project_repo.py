@@ -105,6 +105,12 @@ class ProjectRepository(BaseRepository[Project]):
         await self.session.flush()
         return risk
 
+    async def get_risks(self, project_id: int) -> list[Risk]:
+        result = await self.session.execute(
+            select(Risk).where(Risk.project_id == project_id)
+        )
+        return list(result.scalars().all())
+
     # ---------- Dashboard helpers (M6-API-07) ----------
 
     async def count_by_owner(self, owner_id: int) -> int:

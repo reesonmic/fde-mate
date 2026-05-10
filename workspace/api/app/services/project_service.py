@@ -106,7 +106,13 @@ class ProjectService:
             raise ProjectNotFoundException()
         return {"removed": True}
 
-    async def get_members(self, project_id: int) -> list[ProjectMemberDTO]:
+    async def get_members(self, project_id: int, user_id: int) -> list[ProjectMemberDTO]:
+        # 权限检查
+        project = await self.repo.get(project_id)
+        if not project or project.is_deleted:
+            raise ProjectNotFoundException()
+        if project.owner_id != user_id:
+            raise PermissionDeniedException()
         members = await self.repo.get_members(project_id)
         return [self._member_to_dto(m) for m in members]
 
@@ -117,10 +123,25 @@ class ProjectService:
         risk = await self.repo.add_risk(project_id, payload.title, payload.level.value, payload.mitigation)
         return self._risk_to_dto(risk)
 
-    async def get_health(self, project_id: int) -> dict:
-        project = await self.repo.get_with_relations(project_id)
-        if not project:
+    async def get_risks(self, project_id: int, user_id: int) -> list[RiskDTO]:
+        # 权限检查
+        project = await self.repo.get(project_id)
+        if not project or project.is_deleted:
             raise ProjectNotFoundException()
+        is_member = await self.repo.is_project_member(project_id, user_id)
+        if project.owner_id != user_id and not is_member:
+            raise PermissionDeniedException()
+        risks = await self.repo.get_risks(project_id)
+        return [self._risk_to_dto(r) for r in risks]
+
+    async def get_health(self, project_id: int, user_id: int) -> dict:
+        project = await self.repo.get_with_relations(project_id)
+        if not project or project.is_deleted:
+            raise ProjectNotFoundException()
+        # 权限检查
+        is_member = await self.repo.is_project_member(project_id, user_id)
+        if project.owner_id != user_id and not is_member:
+            raise PermissionDeniedException()
         # Simple health calculation
         health = project.health
         risk_count = len([r for r in project.risks if r.status == "open"])
@@ -131,7 +152,14 @@ class ProjectService:
             health = max(0, health - 10 * overdue)
         return {"health": health, "risk_count": risk_count, "overdue_milestones": overdue}
 
-    async def get_weekly_reports(self, project_id: int) -> list[WeeklyReportDTO]:
+    async def get_weekly_reports(self, project_id: int, user_id: int) -> list[WeeklyReportDTO]:
+        # 权限检查
+        project = await self.repo.get(project_id)
+        if not project or project.is_deleted:
+            raise ProjectNotFoundException()
+        is_member = await self.repo.is_project_member(project_id, user_id)
+        if project.owner_id != user_id and not is_member:
+            raise PermissionDeniedException()
         return []  # Placeholder - would need a weekly_report table
 
     async def generate_weekly_report(self, project_id: int, user_id: int) -> dict:
