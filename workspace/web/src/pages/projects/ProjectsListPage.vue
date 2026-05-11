@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { Card, Row, Col, Button, Select, Input, Modal, Form, message, Tag, Spin } from 'ant-design-vue'
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { projectsApi } from '@/apis/modules/projects'
 import type { ProjectDTO } from '@/types/business'
+import { useUiStore } from '@/stores/ui'
 
 const router = useRouter()
 const projectsStore = useProjectsStore()
+const uiStore = useUiStore()
 const showCreateModal = ref(false)
 const createLoading = ref(false)
 const searchKeyword = ref('')
@@ -53,6 +55,25 @@ const filteredProjects = ref<ProjectDTO[]>([])
 const loadData = async () => {
   await projectsStore.loadProjects({})
   filteredProjects.value = projectsStore.projects
+  
+  // 更新 copilot 上下文
+  updateCopilotContext()
+}
+
+const updateCopilotContext = () => {
+  const projects = filteredProjects.value
+  uiStore.setPageContext({
+    currentPage: 'projects-list',
+    totalProjects: projects.length,
+    projects: projects.map(p => ({
+      id: p.id,
+      name: p.name,
+      phase: p.phase,
+      health: p.health,
+      owner: p.owner_name,
+    })),
+    phaseOptions: phaseOptions,
+  })
 }
 
 const handleSearch = () => {
@@ -68,6 +89,9 @@ const handleSearch = () => {
   }
 
   filteredProjects.value = items
+  
+  // 更新 copilot 上下文
+  updateCopilotContext()
 }
 
 const handleCreate = async () => {
@@ -115,6 +139,17 @@ const handleDelete = async (id: number, e: Event) => {
 onMounted(async () => {
   await loadData()
 })
+
+// 监听路由变化，离开页面时清除上下文
+watch(
+  () => router.currentRoute.value.path,
+  (newPath) => {
+    if (!newPath.startsWith('/projects') || newPath.includes('/projects/')) {
+      // 离开项目列表页时清除上下文
+      uiStore.clearPageContext()
+    }
+  }
+)
 </script>
 
 <template>

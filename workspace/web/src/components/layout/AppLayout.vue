@@ -31,7 +31,12 @@ watch(
     <main class="app-main">
       <RouterView />
     </main>
-    <CopilotPanel v-if="showCopilot" :assistant-key="copilotKey" class="app-copilot" />
+    <CopilotPanel 
+      v-if="showCopilot" 
+      :assistant-key="copilotKey" 
+      :page-context="ui.pageContext"
+      class="app-copilot" 
+    />
   </div>
 </template>
 

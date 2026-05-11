@@ -11,6 +11,7 @@ type MentionItem = TaskDTO | ProjectDTO | CustomerDTO | FileDTO | UserDTO
 
 const props = defineProps<{
   assistantKey: string
+  pageContext?: Record<string, unknown> // 新增：页面上下文数据
 }>()
 
 const copilotStore = useCopilotStore()
@@ -24,7 +25,7 @@ const currentMessages = computed(() => {
 })
 
 const handleSend = (content: string, mentions?: MentionItem[]) => {
-  copilotStore.sendMessage(props.assistantKey, content, mentions)
+  copilotStore.sendMessage(props.assistantKey, content, mentions, props.pageContext)
 }
 
 const handleClear = () => {

@@ -25,6 +25,9 @@ export const useUiStore = defineStore('ui', () => {
 
   const notifications = ref<UINotification[]>([])
 
+  // Page context for copilot
+  const pageContext = ref<Record<string, unknown>>({})
+
   const setTheme = (newTheme: 'light' | 'dark') => {
     theme.value = newTheme
   }
@@ -64,6 +67,14 @@ export const useUiStore = defineStore('ui', () => {
     notifications.value = []
   }
 
+  const setPageContext = (context: Record<string, unknown>) => {
+    pageContext.value = { ...pageContext.value, ...context }
+  }
+
+  const clearPageContext = () => {
+    pageContext.value = {}
+  }
+
   const copilotOpen = computed(() => copilotVisible.value)
 
   return {
@@ -73,6 +84,7 @@ export const useUiStore = defineStore('ui', () => {
     copilotOpen,
     globalLoading,
     notifications,
+    pageContext,
     setTheme,
     toggleSidebar,
     setSidebarCollapsed,
@@ -82,5 +94,7 @@ export const useUiStore = defineStore('ui', () => {
     addNotification,
     removeNotification,
     clearNotifications,
+    setPageContext,
+    clearPageContext,
   }
 })

@@ -48,7 +48,8 @@ export const useCopilotStore = defineStore('copilot', () => {
   const sendMessage = async (
     assistantType: string,
     content: string,
-    mentions?: Array<{ type: string; id: string; label: string }>
+    mentions?: Array<{ type: string; id: string; label: string }>,
+    pageContext?: Record<string, unknown> // 新增：页面上下文数据
   ) => {
     // Add user message
     addMessage(assistantType, {
@@ -80,13 +81,19 @@ export const useCopilotStore = defineStore('copilot', () => {
       chat: 'chat',
     }
 
+    // 构建上下文：合并 assistantType 和页面上下文
+    const context = {
+      assistantType,
+      ...pageContext, // 传入页面的实际数据
+    }
+
     copilotApi.chat(
       {
         assistantId: assistantIdMap[assistantType] || 'chat',
         message: content,
         sessionId: getSessionId(assistantType),
         mode: 'smart',
-        context: { assistantType },
+        context, // 使用完整的上下文
       },
       (chunk) => {
         const msg = messages.value[assistantType]?.find(
