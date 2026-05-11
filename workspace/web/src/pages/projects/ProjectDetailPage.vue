@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, h } from 'vue'
 import { Tabs, Card, Table, Button, Tag, Descriptions, Form, Input, Modal, DatePicker, message, Spin, Statistic, Row, Col, Progress, Timeline, Select } from 'ant-design-vue'
-import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, ArrowLeftOutlined, EditOutlined } from '@ant-design/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { projectsApi } from '@/apis/modules/projects'
@@ -19,6 +19,16 @@ const members = ref<ProjectMemberDTO[]>([])
 const milestones = ref<ProjectMilestoneDTO[]>([])
 const risks = ref<Array<{ id: number; title: string; level: string; mitigation: string; status: string }>>([])
 const weeklyReports = ref<WeeklyReportDTO[]>([])
+
+// Edit project
+const showEditProject = ref(false)
+const savingProject = ref(false) // 防止重复提交
+const editForm = reactive({
+  name: '',
+  phase: '',
+  start_at: undefined as dayjs.Dayjs | undefined, // 统一使用 dayjs 类型
+  end_at: undefined as dayjs.Dayjs | undefined,
+})
 
 // Add member
 const showAddMember = ref(false)
@@ -44,6 +54,16 @@ const addRiskForm = reactive({
 })
 
 const projectId = computed(() => Number(route.params.id))
+
+const handleGenerateReport = async () => {
+  try {
+    await projectsApi.generateWeeklyReport(projectId.value)
+    message.success('已生成')
+    await loadData()
+  } catch {
+    message.error('生成失败')
+  }
+}
 
 const healthLevel = computed(() => {
   if (!health.value) return 'unknown'
@@ -114,6 +134,68 @@ const loadData = async () => {
   }
 }
 
+const handleEditProject = () => {
+  if (!project.value) return
+  
+  // 填充表单数据
+  editForm.name = project.value.name
+  editForm.phase = project.value.phase
+  // 将字符串转换为 dayjs 对象
+  editForm.start_at = project.value.start_at ? dayjs(project.value.start_at) : undefined
+  editForm.end_at = project.value.end_at ? dayjs(project.value.end_at) : undefined
+  
+  showEditProject.value = true
+}
+
+const handleSaveProject = async () => {
+  // 表单验证
+  if (!editForm.name.trim()) {
+    message.warning('请输入项目名称')
+    return
+  }
+  
+  // 防止重复提交
+  if (savingProject.value) return
+  
+  // 日期合法性校验
+  if (editForm.start_at && editForm.end_at) {
+    if (editForm.end_at.isBefore(editForm.start_at)) {
+      message.warning('结束日期不能早于开始日期')
+      return
+    }
+  }
+  
+  savingProject.value = true
+  try {
+    await projectsApi.update(projectId.value, {
+      name: editForm.name,
+      startDate: editForm.start_at?.format('YYYY-MM-DD'),
+      endDate: editForm.end_at?.format('YYYY-MM-DD'),
+    })
+    message.success('项目信息已更新')
+    showEditProject.value = false
+    resetEditForm()
+    await loadData()
+  } catch (e) {
+    console.error('更新失败', e)
+    message.error('更新失败')
+  } finally {
+    savingProject.value = false
+  }
+}
+
+const resetEditForm = () => {
+  editForm.name = ''
+  editForm.phase = ''
+  editForm.start_at = undefined
+  editForm.end_at = undefined
+}
+
+const handleCancelEdit = () => {
+  resetEditForm()
+  showEditProject.value = false
+}
+
 const handleAddMember = async () => {
   if (!addMemberForm.user_id) {
     message.warning('请输入用户ID')
@@ -159,7 +241,7 @@ const handleAddRisk = async () => {
   try {
     await projectsApi.addRisk(projectId.value, {
       title: addRiskForm.title,
-      description: addRiskForm.description,
+      mitigation: addRiskForm.description,
       level: addRiskForm.level,
     })
     message.success('添加成功')
@@ -226,6 +308,10 @@ onMounted(async () => {
           <h2>{{ project?.name || '项目详情' }}</h2>
           <p>阶段: {{ project?.phase }} | 负责人: {{ project?.owner_name || '-' }}</p>
         </div>
+        <Button type="primary" @click="handleEditProject">
+          <EditOutlined />
+          编辑项目
+        </Button>
         <div class="health-badge" v-if="health">
           <Statistic
             title="健康度"
@@ -328,7 +414,7 @@ onMounted(async () => {
         <Tabs.TabPane key="reports" tab="周报">
           <Card :bordered="false">
             <template #extra>
-              <Button type="primary" size="small" @click="projectsApi.generateWeeklyReport(projectId.value).then(() => { message.success('已生成'); loadData() })">
+              <Button type="primary" size="small" @click="handleGenerateReport">
                 生成周报
               </Button>
             </template>
@@ -351,6 +437,46 @@ onMounted(async () => {
         </Tabs.TabPane>
       </Tabs>
     </Spin>
+
+    <!-- Edit Project Modal -->
+    <Modal 
+      v-model:visible="showEditProject" 
+      title="编辑项目" 
+      @ok="handleSaveProject"
+      @cancel="handleCancelEdit"
+      :confirmLoading="savingProject"
+      ok-text="保存"
+      cancel-text="取消"
+      width="600px"
+    >
+      <Form :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
+        <Form.Item label="项目名称" required>
+          <Input v-model:value="editForm.name" placeholder="输入项目名称" />
+        </Form.Item>
+        <Form.Item label="项目阶段">
+          <!-- phase 字段仅用于展示，不参与提交（后端不允许修改阶段） -->
+          <span>{{ editForm.phase }}</span>
+        </Form.Item>
+        <Form.Item label="开始日期">
+          <DatePicker 
+            v-model:value="editForm.start_at" 
+            style="width: 100%"
+            placeholder="选择开始日期" 
+          />
+        </Form.Item>
+        <Form.Item label="结束日期">
+          <DatePicker 
+            v-model:value="editForm.end_at" 
+            style="width: 100%"
+            :disabled-date="(current: dayjs.Dayjs) => {
+              if (!editForm.start_at || !current) return false
+              return current.isBefore(editForm.start_at, 'day')
+            }"
+            placeholder="选择结束日期" 
+          />
+        </Form.Item>
+      </Form>
+    </Modal>
 
     <!-- Add Member Modal -->
     <Modal v-model:visible="showAddMember" title="添加成员" @ok="handleAddMember">
