@@ -131,7 +131,7 @@ async def agent_node(state: AgentState) -> AsyncIterator[str]:
         context = await _retrieve_context(query, state["assistant_id"])
 
         # Step 2: Build system prompt
-        system_prompt = get_system_prompt(agent_name, state["mode"])
+        system_prompt = get_system_prompt(agent_name, state["mode"], state.get("context"))
         if context:
             system_prompt += (
                 "\n\n---\n\n"
@@ -142,6 +142,22 @@ async def agent_node(state: AgentState) -> AsyncIterator[str]:
                 "参考信息仅作参考，不得编造信息。"
                 "如果参考信息不足以回答问题，请说明并给出通用建议。"
             )
+        
+        # 如果有页面上下文，添加到系统提示词
+        if page_context := state.get("context"):
+            from app.orchestrator.prompts import _format_context
+            context_text = _format_context(page_context)
+            if context_text:
+                system_prompt += (
+                    "\n\n---\n\n"
+                    "[页面上下文开始]\n"
+                    "以下是用户当前页面的数据，请基于这些数据回答问题：\n\n"
+                    f"{context_text}\n"
+                    "[页面上下文结束]\n\n"
+                    "请基于以上页面上下文数据回答用户的问题。"
+                    "如果上下文中有相关数据，请直接列出具体信息。"
+                    "不要说'未收到'或'请提供'之类的话，数据已经在上下文中了。"
+                )
 
         # Step 3: Get tool definitions for this agent
         registry = get_tools_for_agent(agent_name)
