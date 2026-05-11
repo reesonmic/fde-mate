@@ -56,19 +56,72 @@ class MockLlm(LlmProvider):
     """Mock LLM for development/testing."""
 
     async def stream(self, messages: list[dict]) -> AsyncIterator[str]:
+        # 提取系统提示词中的上下文
+        context_text = ""
+        for msg in messages:
+            if msg.get("role") == "system" and msg.get("content"):
+                # 查找页面上下文
+                if "页面上下文开始" in msg["content"]:
+                    start = msg["content"].find("页面上下文开始]")
+                    end = msg["content"].find("页面上下文结束]")
+                    if start != -1 and end != -1:
+                        context_text = msg["content"][start:end].strip()
+                        break
+        
+        # 提取用户消息
         last_user = ""
         for msg in reversed(messages):
             if msg.get("role") == "user":
                 last_user = msg.get("content", "")
                 break
 
-        response = self._get_mock_response(last_user)
+        response = self._get_mock_response(last_user, context_text)
         for char in response:
             yield char
 
-    def _get_mock_response(self, query: str) -> str:
-        """Simple mock responses based on query keywords."""
+    def _get_mock_response(self, query: str, context: str = "") -> str:
+        """Simple mock responses based on query keywords and context."""
         q = query.lower()
+        
+        # 如果有上下文数据，基于上下文回复
+        if context:
+            if "项目" in query or "project" in q:
+                # 提取项目信息
+                if "项目总数" in context:
+                    import re
+                    total_match = re.search(r'项目总数\*\*: (\d+)', context)
+                    total = total_match.group(1) if total_match else "未知"
+                    
+                    # 提取项目列表
+                    projects = []
+                    for line in context.split('\n'):
+                        if re.match(r'\d+\..*?\(', line):
+                            projects.append(line.strip())
+                    
+                    if projects:
+                        return (
+                            f"根据页面数据，{query}\n\n"
+                            f"**项目总数**: {total} 个\n\n"
+                            f"**项目列表**:\n"
+                            + "\n".join(projects[:10])
+                            + (f"\n\n... 共 {total} 个项目" if len(projects) > 10 else "")
+                            + "\n\n需要我详细分析某个项目吗？"
+                        )
+            
+            elif "任务" in query or "task" in q:
+                if "任务总数" in context:
+                    import re
+                    total_match = re.search(r'任务总数\*\*: (\d+)', context)
+                    total = total_match.group(1) if total_match else "未知"
+                    
+                    return (
+                        f"根据页面数据，{query}\n\n"
+                        f"**任务总数**: {total} 个\n\n"
+                        f"页面中包含了详细的任务列表和统计信息。"
+                        f"需要我为您分析任务分布或优先级吗？"
+                    )
+        
+        # 默认回复
         if "任务" in query or "task" in q:
             return (
                 f"收到关于任务的查询：「{query}」。\n\n"
