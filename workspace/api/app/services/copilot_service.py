@@ -40,7 +40,13 @@ class CopilotService:
                             break
                         try:
                             chunk = json.loads(data)
-                            if chunk.get("type") == "token":
+                            # 检查是否是错误响应
+                            if chunk.get("type") == "error":
+                                # AI Orchestrator 返回错误，使用 mock 回复
+                                mock_text = f"[AI 服务异常] {chunk.get('message', 'AI 处理失败，已降级为 Mock 回复')}\n\n您的消息是：{req.message}"
+                                yield {"type": "token", "delta": mock_text}
+                                full_response.append(mock_text)
+                            elif chunk.get("type") == "token":
                                 full_response.append(chunk["delta"])
                             yield chunk
                         except json.JSONDecodeError:
