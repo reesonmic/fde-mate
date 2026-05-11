@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { Tabs, Button, Input, Select, Space, Modal, Form, Tag, DatePicker, message, Spin, Dropdown, Menu, Checkbox } from 'ant-design-vue'
 import { PlusOutlined, SearchOutlined, FilterOutlined, MoreOutlined } from '@ant-design/icons-vue'
 import KanbanBoard from '@/components/business/KanbanBoard.vue'
@@ -8,8 +8,12 @@ import { useTasksStore } from '@/stores/tasks'
 import { tasksApi } from '@/apis/modules/tasks'
 import type { TaskDTO } from '@/types/business'
 import dayjs from 'dayjs'
+import { useUiStore } from '@/stores/ui'
+import { useRouter } from 'vue-router'
 
 const tasksStore = useTasksStore()
+const uiStore = useUiStore()
+const router = useRouter()
 const activeTab = ref('list')
 const searchKeyword = ref('')
 const showCreateModal = ref(false)
@@ -49,6 +53,9 @@ const filteredTasks = computed(() => {
   if (filters.priority.length > 0) {
     items = items.filter((t) => filters.priority.includes(t.priority))
   }
+
+  // 更新 copilot 上下文
+  updateCopilotContext(items)
 
   return items
 })
@@ -194,12 +201,69 @@ const loadData = async () => {
     page: pagination.current,
     size: pagination.pageSize,
   })
+  
+  // 更新 copilot 上下文
+  updateCopilotContext(filteredTasks.value)
+}
+
+// 更新 Copilot 上下文
+const updateCopilotContext = (tasks: TaskDTO[]) => {
+  // 统计信息
+  const statusStats = {
+    todo: tasks.filter(t => t.status === 'todo').length,
+    in_progress: tasks.filter(t => t.status === 'in_progress').length,
+    review: tasks.filter(t => t.status === 'review').length,
+    blocked: tasks.filter(t => t.status === 'blocked').length,
+    done: tasks.filter(t => t.status === 'done').length,
+  }
+  
+  const priorityStats = {
+    p0: tasks.filter(t => t.priority === 'p0').length,
+    p1: tasks.filter(t => t.priority === 'p1').length,
+    p2: tasks.filter(t => t.priority === 'p2').length,
+    p3: tasks.filter(t => t.priority === 'p3').length,
+  }
+  
+  uiStore.setPageContext({
+    currentPage: 'tasks-list',
+    totalTasks: tasks.length,
+    activeTab: activeTab.value,
+    tasks: tasks.map(t => ({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      priority: t.priority,
+      assignee: t.assignee_name,
+      dueDate: t.due_at,
+      projectId: t.project_id,
+    })),
+    statusStats,
+    priorityStats,
+    filters: {
+      status: filters.status,
+      priority: filters.priority,
+      keyword: searchKeyword.value,
+    },
+    statusOptions,
+    priorityOptions,
+  })
 }
 
 onMounted(async () => {
   await loadData()
   await tasksStore.loadKanban()
 })
+
+// 监听路由变化，离开页面时清除上下文
+watch(
+  () => router.currentRoute.value.path,
+  (newPath) => {
+    if (newPath !== '/tasks') {
+      // 离开任务中心页时清除上下文
+      uiStore.clearPageContext()
+    }
+  }
+)
 </script>
 
 <template>
