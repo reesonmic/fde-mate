@@ -14,10 +14,13 @@ Architectural notes:
   classify failures (M6-AI-04).
 """
 import json
+import logging
 import time
 from typing import AsyncIterator
 
 from fastapi import FastAPI, Request
+
+logger = logging.getLogger(__name__)
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -147,6 +150,11 @@ async def chat(request: Request, req: ChatRequest) -> StreamingResponse:
                 data = ChatTokenChunk(delta=chunk).model_dump_json()
                 yield f"data: {data}\n\n"
         except Exception as exc:  # noqa: BLE001
+            # 记录详细的异常信息到日志
+            import traceback
+            error_details = traceback.format_exc()
+            logger.error(f"AI chat error for assistant_id={req.assistantId}: {exc}\n{error_details}")
+            
             audit_entry.error = str(exc)
             yield _sse_error_frame(
                 SYS_INTERNAL_ERROR,

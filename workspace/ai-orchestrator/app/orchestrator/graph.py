@@ -122,64 +122,74 @@ async def agent_node(state: AgentState) -> AsyncIterator[str]:
     5. If tool calls detected -> execute -> feed back to LLM
     6. Stream final response
     """
-    agent_name = get_agent_name(state["assistant_id"])
-    query = _extract_query(state["messages"])
+    try:
+        agent_name = get_agent_name(state["assistant_id"])
+        query = _extract_query(state["messages"])
+        logger.info(f"agent_node started: assistant_id={state['assistant_id']}, agent_name={agent_name}")
 
-    # Step 1: RAG retrieval
-    context = await _retrieve_context(query, state["assistant_id"])
+        # Step 1: RAG retrieval
+        context = await _retrieve_context(query, state["assistant_id"])
 
-    # Step 2: Build system prompt
-    system_prompt = get_system_prompt(agent_name, state["mode"])
-    if context:
-        system_prompt += (
-            "\n\n---\n\n"
-            "[参考信息开始]\n"
-            f"{context}\n"
-            "[参考信息结束]\n\n"
-            "请基于以上参考信息回答用户的问题。"
-            "参考信息仅作参考，不得编造信息。"
-            "如果参考信息不足以回答问题，请说明并给出通用建议。"
-        )
+        # Step 2: Build system prompt
+        system_prompt = get_system_prompt(agent_name, state["mode"])
+        if context:
+            system_prompt += (
+                "\n\n---\n\n"
+                "[参考信息开始]\n"
+                f"{context}\n"
+                "[参考信息结束]\n\n"
+                "请基于以上参考信息回答用户的问题。"
+                "参考信息仅作参考，不得编造信息。"
+                "如果参考信息不足以回答问题，请说明并给出通用建议。"
+            )
 
-    # Step 3: Get tool definitions for this agent
-    registry = get_tools_for_agent(agent_name)
-    tools = state["messages"]
+        # Step 3: Get tool definitions for this agent
+        registry = get_tools_for_agent(agent_name)
+        tools = state["messages"]
 
-    # Build messages with system prompt
-    messages = [{"role": "system", "content": system_prompt}] + tools
+        # Build messages with system prompt
+        messages = [{"role": "system", "content": system_prompt}] + tools
+        logger.info(f"agent_node: messages count={len(messages)}, system_prompt length={len(system_prompt)}")
 
-    # Step 4: Call LLM
-    llm = get_llm()
-    full_response = ""
-    async for chunk in llm.stream(messages):
-        full_response += chunk
-        yield chunk
-
-    # Step 5: Check for tool calls and execute if found (with iteration limit)
-    iteration = 0
-    while True:
-        tool_calls = _parse_tool_calls(full_response)
-        if not tool_calls or not registry or iteration >= MAX_ITERATIONS:
-            break
-
-        iteration += 1
-        # Add assistant's response to conversation
-        messages.append({"role": "assistant", "content": full_response})
-
-        # Execute tools
-        tool_results = await _execute_tools(tool_calls, agent_name)
-        for tr in tool_results:
-            messages.append(tr)
-            yield tr["content"]
-
-        # Second LLM call with tool results
+        # Step 4: Call LLM
+        llm = get_llm()
+        logger.info(f"agent_node: using LLM provider={type(llm).__name__}")
         full_response = ""
         async for chunk in llm.stream(messages):
             full_response += chunk
             yield chunk
 
-    if iteration >= MAX_ITERATIONS:
-        yield "\n\n已达到最大迭代次数，无法继续处理。请简化您的请求。"
+        # Step 5: Check for tool calls and execute if found (with iteration limit)
+        iteration = 0
+        while True:
+            tool_calls = _parse_tool_calls(full_response)
+            if not tool_calls or not registry or iteration >= MAX_ITERATIONS:
+                break
+
+            iteration += 1
+            # Add assistant's response to conversation
+            messages.append({"role": "assistant", "content": full_response})
+
+            # Execute tools
+            tool_results = await _execute_tools(tool_calls, agent_name)
+            for tr in tool_results:
+                messages.append(tr)
+                yield tr["content"]
+
+            # Second LLM call with tool results
+            full_response = ""
+            async for chunk in llm.stream(messages):
+                full_response += chunk
+                yield chunk
+
+        if iteration >= MAX_ITERATIONS:
+            yield "\n\n已达到最大迭代次数，无法继续处理。请简化您的请求。"
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        logger.error(f"agent_node error: {e}\n{error_details}")
+        # 重新抛出异常，让上层处理
+        raise
 
 
 # Router node
