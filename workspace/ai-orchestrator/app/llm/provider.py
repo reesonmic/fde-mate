@@ -61,9 +61,9 @@ class MockLlm(LlmProvider):
         for msg in messages:
             if msg.get("role") == "system" and msg.get("content"):
                 # 查找页面上下文
-                if "页面上下文开始" in msg["content"]:
-                    start = msg["content"].find("页面上下文开始]")
-                    end = msg["content"].find("页面上下文结束]")
+                if "[页面上下文开始]" in msg["content"]:
+                    start = msg["content"].find("[页面上下文开始]")
+                    end = msg["content"].find("[页面上下文结束]")
                     if start != -1 and end != -1:
                         context_text = msg["content"][start:end].strip()
                         break
